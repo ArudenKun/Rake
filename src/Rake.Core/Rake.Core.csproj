@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>12</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AutoInterface" Version="2.3.0">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="CliWrap" Version="3.6.6" />
+        <PackageReference Include="Cogwheel" Version="2.1.0" />
+        <PackageReference Include="Credfeto.Enumeration.Source.Generation" Version="1.1.7.384">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" Version="1.1.7.384" ExcludeAssets="runtime"/>
+        <PackageReference Include="Flurl.Http" Version="4.0.2" />
+        <PackageReference Include="Gress" Version="2.1.1"/>
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
+        <PackageReference Include="Serilog.Enrichers.ClassName" Version="0.2.0"/>
+        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Async" Version="2.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
+        <PackageReference Include="Serilog.Sinks.FileEx" Version="5.1.8"/>
+        <PackageReference Include="System.Reactive" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <TrimmerRootAssembly Include="YoutubeExplode"/>
+        <TrimmerRootAssembly Include="YoutubeExplode.Converter"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="YtDlp\Options\" />
+    </ItemGroup>
+
+</Project>

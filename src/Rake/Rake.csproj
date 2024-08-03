@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <NoWarn>$(NoWarn);SYSLIB0020;AVLN3001</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <CFBundleName>Rake</CFBundleName> <!-- Also defines .app file name -->
+        <CFBundleDisplayName>RakeDesktop</CFBundleDisplayName>
+        <CFBundleIdentifier>com.rake</CFBundleIdentifier>
+        <CFBundleVersion>1.0.0</CFBundleVersion>
+        <CFBundlePackageType>AAPL</CFBundlePackageType>
+        <CFBundleSignature>4242</CFBundleSignature>
+        <CFBundleShortVersionString>1.0.0</CFBundleShortVersionString>
+        <CFBundleExecutable>Rake</CFBundleExecutable>
+        <CFBundleIconFile>AppName.icns</CFBundleIconFile> <!-- Will be copied from output directory -->
+        <NSPrincipalClass>NSApplication</NSPrincipalClass>
+        <NSHighResolutionCapable>true</NSHighResolutionCapable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Folder Include="Controls\" />
+        <Folder Include="Models\"/>
+        <AvaloniaResource Include="Assets\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Arudenkun.Webview.Avalonia" Version="11.1.1" />
+        <PackageReference Include="ArudenKun.WebView.Avalonia.Desktop" Version="11.1.1" />
+        <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.2.1" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.1.1"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.1"/>
+        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.1"/>
+        <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.1.0" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+        <PackageReference Include="ZiggyCreatures.FusionCache" Version="1.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\libs\SukiUI\SukiUI\SukiUI.csproj" />
+      <ProjectReference Include="..\Rake.Core\Rake.Core.csproj" />
+      <ProjectReference Include="..\Rake.Generator\Rake.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+</Project>

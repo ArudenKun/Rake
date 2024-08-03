@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="Rake/Views/MainWindow.axaml" value="Rake/Rake.csproj" />
+        <entry key="src/Rake/App.axaml" value="src/Rake/Rake.csproj" />
+        <entry key="src/Rake/Views/Dialogs/MessageBoxView.axaml" value="src/Rake/Rake.csproj" />
+        <entry key="src/Rake/Views/MainView.axaml" value="src/Rake/Rake.csproj" />
+        <entry key="src/Rake/Views/MainWindow.axaml" value="src/Rake/Rake.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

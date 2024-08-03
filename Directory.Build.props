@@ -1,0 +1,8 @@
+<Project>
+    <PropertyGroup>
+        <RootDir>$(MSBuildThisFileDirectory)</RootDir>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <DefineConstants>$(DefineConstants);HAS_AVALONIA</DefineConstants>
+    </PropertyGroup>
+</Project>
