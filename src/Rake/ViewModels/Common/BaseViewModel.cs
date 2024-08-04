@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using AutoInterfaceAttributes;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -52,6 +53,8 @@ public abstract partial class BaseViewModel : ObservableValidator, IViewModel
 
     #region Dispose
 
+    protected CompositeDisposable Disposables { get; } = new();
+
     ~BaseViewModel() => Dispose(false);
 
     protected void OnAllPropertiesChanged() => OnPropertyChanged(string.Empty);
@@ -61,6 +64,7 @@ public abstract partial class BaseViewModel : ObservableValidator, IViewModel
     public void Dispose()
     {
         Dispose(true);
+        Disposables.Dispose();
         GC.SuppressFinalize(this);
     }
 

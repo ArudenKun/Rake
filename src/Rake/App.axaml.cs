@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using AvaloniaWebView;
 using Rake.Core.Extensions;
 using Rake.Services;
 using Rake.ViewModels;
@@ -28,8 +27,6 @@ public sealed class App : Application, IDisposable
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-
-        AvaloniaWebViewBuilder.Initialize(config => config.IsInPrivateModeEnabled = true);
     }
 
     public override void OnFrameworkInitializationCompleted()

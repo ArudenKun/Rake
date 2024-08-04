@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Rake.Core.Helpers;
 
@@ -10,9 +11,11 @@ public static class OSHelper
     public static bool IsWindows => GetOSPlatform() == OSPlatform.Windows;
     public static bool IsLinux => GetOSPlatform() == OSPlatform.Linux;
     public static bool IsOSX => GetOSPlatform() == OSPlatform.OSX;
+    public static Platform Platform => GetPlatform();
+    public static OSPlatform OSPlatform => GetOSPlatform();
 
     /// <summary>
-    /// Gets the <see cref="OperatingSystem"/> depending on what platform you are on
+    /// Gets the <see cref="Platform"/> depending on what platform you are on
     /// </summary>
     /// <returns>Returns the OS Version</returns>
     /// <exception cref="Exception"></exception>
@@ -36,27 +39,27 @@ public static class OSHelper
     }
 
     /// <summary>
-    /// Gets the <see cref="OperatingSystem"/> depending on what platform you are on
+    /// Gets the <see cref="Platform"/> depending on what platform you are on
     /// </summary>
     /// <returns>Returns the OS Version</returns>
     /// <exception cref="Exception"></exception>
-    public static OperatingSystem GetOperatingSystem()
+    public static Platform GetPlatform()
     {
         if (IsWindows)
         {
-            return OperatingSystem.Windows;
+            return Platform.Windows;
         }
 
         if (IsLinux)
         {
-            return OperatingSystem.Linux;
+            return Platform.Linux;
         }
 
-        return IsOSX ? OperatingSystem.OSX : OperatingSystem.NotSupported;
+        return IsOSX ? Platform.OSX : Platform.NotSupported;
     }
 }
 
-public enum OperatingSystem
+public enum Platform
 {
     Windows,
     Linux,

@@ -54,7 +54,7 @@ public static class BinariesHelper
 
         Directory.CreateDirectory(BinDir);
 
-        var zipName = $"ffmpeg-{OSHelper.GetOperatingSystem().GetName().ToLower()}-x64.zip";
+        var zipName = $"ffmpeg-{OSHelper.GetPlatform().GetName().ToLower()}-x64.zip";
         var zipPath = BinDir.JoinPath(zipName);
         var downloadUrl = $"https://github.com/Tyrrrz/FFmpegBin/releases/latest/download/{zipName}";
         try
@@ -159,14 +159,14 @@ public static class BinariesHelper
 
     private static string GetFFmpegFileName()
     {
-        switch (OSHelper.GetOperatingSystem())
+        switch (OSHelper.GetPlatform())
         {
-            case OperatingSystem.Windows:
+            case Platform.Windows:
                 return "ffmpeg.exe";
-            case OperatingSystem.OSX:
-            case OperatingSystem.Linux:
+            case Platform.OSX:
+            case Platform.Linux:
                 return "ffmpeg";
-            case OperatingSystem.NotSupported:
+            case Platform.NotSupported:
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -174,15 +174,15 @@ public static class BinariesHelper
 
     private static string GetYtDlpFileName()
     {
-        switch (OSHelper.GetOperatingSystem())
+        switch (OSHelper.GetPlatform())
         {
-            case OperatingSystem.Windows:
+            case Platform.Windows:
                 return "yt-dlp.exe";
-            case OperatingSystem.OSX:
+            case Platform.OSX:
                 return "yt-dlp_macos";
-            case OperatingSystem.Linux:
+            case Platform.Linux:
                 return "yt-dlp";
-            case OperatingSystem.NotSupported:
+            case Platform.NotSupported:
             default:
                 throw new ArgumentOutOfRangeException();
         }

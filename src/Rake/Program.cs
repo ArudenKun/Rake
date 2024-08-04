@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Avalonia;
-using Avalonia.WebView.Desktop;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
@@ -89,7 +88,6 @@ public static class Program
         AppBuilder
             .Configure(() => Services.GetRequiredService<App>())
             .UsePlatformDetect()
-            .UseDesktopWebView()
             .WithInterFont()
             .LogToTrace();
 
@@ -102,11 +100,11 @@ public static class Program
         var logsPath = EnvironmentHelper.AppDataPath.JoinPath("logs");
 
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Is(IsDebug() ? LogEventLevel.Debug : LogEventLevel.Warning)
+            .MinimumLevel.Is(IsDebug ? LogEventLevel.Debug : LogEventLevel.Warning)
             .WriteTo.Console(outputTemplate: logTemplate)
             .WriteTo.Async(x =>
                 x.FileEx(
-                    logsPath.JoinPath($"logs{(IsDebug() ? ".debug" : "")}.txt"),
+                    logsPath.JoinPath($"logs{(IsDebug ? ".debug" : "")}.txt"),
                     ".dd-MM-yyyy",
                     outputTemplate: logTemplate,
                     rollingInterval: RollingInterval.Day,
@@ -131,14 +129,12 @@ public static class Program
             .CreateLogger();
     }
 
-    private static bool IsDebug()
-    {
+    private static bool IsDebug
 #if DEBUG
-        return true;
+        => true;
 #else
-        return false;
+        => false;
 #endif
-    }
 
     #endregion
 }

@@ -34,6 +34,14 @@ internal static class SymbolExtensions
         return HasAttribute(symbol, typeof(TAttribute).Name);
     }
 
+    public static bool HasInterface(this ITypeSymbol typeSymbol, ITypeSymbol interfaceSymbol)
+    {
+        return HasInterface(typeSymbol, interfaceSymbol.ToDisplayString());
+    }
+
+    public static bool HasInterface(this ITypeSymbol typeSymbol, string fullInterfaceName) =>
+        typeSymbol.AllInterfaces.Any(x => x.ToDisplayString() == fullInterfaceName);
+
     public static string ToFullDisplayString(this ISymbol s)
     {
         return s.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
