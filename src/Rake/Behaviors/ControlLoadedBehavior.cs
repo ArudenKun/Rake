@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
 using Rake.Behaviors.Common;
+using Rake.Core.Extensions;
 
 namespace Rake.Behaviors;
 

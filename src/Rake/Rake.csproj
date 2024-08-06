@@ -5,12 +5,15 @@
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <NoWarn>$(NoWarn);SYSLIB0020;AVLN3001</NoWarn>
         <RuntimeIdentifiers>osx-x64;win-x64;linux-x64</RuntimeIdentifiers>
-        <SelfContained>true</SelfContained>
-    </PropertyGroup>    
-
+        <Platform>x64</Platform>
+        <PlatformTarget>x64</PlatformTarget>
+<!--        <PublishAot>true</PublishAot>-->
+        <NoWarn>$(NoWarn);SYSLIB0020;AVLN3001</NoWarn>
+    </PropertyGroup>
+    
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
@@ -23,12 +26,15 @@
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
         <PackageReference Include="Avalonia.Xaml.Behaviors" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
-        <PackageReference Include="SukiUI" />
-        <PackageReference Include="WebViewControl-Avalonia" />
+        <PackageReference Include="FluentAvaloniaUI" />
+        <PackageReference Include="FluentIcons.Avalonia.Fluent" />
         <PackageReference Include="ZiggyCreatures.FusionCache" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\CefGlue\CefGlue.Avalonia\CefGlue.Avalonia.csproj" />
+        <ProjectReference Include="..\CefGlue\CefGlue.Common.Shared\CefGlue.Common.Shared.csproj" />
+        <ProjectReference Include="..\CefGlue\CefGlue\CefGlue.csproj" />
         <ProjectReference Include="..\Rake.Core\Rake.Core.csproj" />
         <ProjectReference Include="..\Rake.Generator\Rake.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
@@ -29,7 +30,10 @@ public sealed class App : Application, IDisposable
         AvaloniaXamlLoader.Load(this);
     }
 
+    [RequiresUnreferencedCode("BindingPlugins.DataValidators.RemoveAt(Int) requires reflection")]
+#pragma warning disable IL2046
     public override void OnFrameworkInitializationCompleted()
+#pragma warning restore IL2046
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

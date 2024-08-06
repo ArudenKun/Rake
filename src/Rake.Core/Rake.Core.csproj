@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,11 +29,6 @@
         <PackageReference Include="Serilog.Sinks.Console" />
         <PackageReference Include="Serilog.Sinks.FileEx" />
         <PackageReference Include="System.Reactive" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <TrimmerRootAssembly Include="YoutubeExplode" />
-        <TrimmerRootAssembly Include="YoutubeExplode.Converter" />
     </ItemGroup>
 
     <ItemGroup>

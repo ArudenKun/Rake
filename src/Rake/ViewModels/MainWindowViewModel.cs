@@ -1,10 +1,13 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Flurl;
 using Microsoft.Extensions.Logging;
+using Rake.Controls.Console;
 using Rake.Generator.Attributes;
 using Rake.ViewModels.Common;
-using WebViewControl;
 
 namespace Rake.ViewModels;
 
@@ -13,7 +16,6 @@ public partial class MainWindowViewModel : BaseViewModel
 {
     private readonly ILogger<MainWindowViewModel> _logger;
     [ObservableProperty] private string _greeting = "Test";
-
     [ObservableProperty] private Url _address = "https://www.google.com/";
 
     public MainWindowViewModel(ILogger<MainWindowViewModel> logger)
@@ -24,9 +26,14 @@ public partial class MainWindowViewModel : BaseViewModel
     }
     
     [RelayCommand]
-    private void Initialized(WebView webView)
+    private async Task Initialized()
     {
-        webView.Address = Address;
+        // while (true)
+        // {
+        //     await consoleView.ViewWriter.WriteAsync($"Test: {Random.Shared.Next()}");
+        //     await Task.Delay(TimeSpan.FromSeconds(3));
+        // }
+        // webView.Address = Address;
         // webView.Url = Address.ToUri();
     }
 }

@@ -14,6 +14,8 @@ using Serilog;
 using Serilog.Enrichers.ClassName;
 using Serilog.Events;
 using Serilog.Sinks.FileEx;
+using Xilium.CefGlue;
+using Xilium.CefGlue.Common;
 using ZiggyCreatures.Caching.Fusion;
 using ZiggyCreatures.Caching.Fusion.Serialization;
 
@@ -88,6 +90,10 @@ public static class Program
         AppBuilder
             .Configure(() => Services.GetRequiredService<App>())
             .UsePlatformDetect()
+            .AfterSetup(_ => CefRuntimeLoader.Initialize(new CefSettings
+            {
+                RootCachePath = EnvironmentHelper.AppDataPath.JoinPath("cache", "chrome")
+            }))
             .WithInterFont()
             .LogToTrace();
 
