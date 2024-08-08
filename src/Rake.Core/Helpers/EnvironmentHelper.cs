@@ -23,7 +23,7 @@ public static class EnvironmentHelper
     /// <summary>
     ///     Returns the path of the ApplicationData.
     /// </summary>
-    public static string AppDataPath => GetApplicationDataPath();
+    public static string AppDataDirectory => GetApplicationDataPath();
 
     /// <summary>
     ///     Returns the directory from which the application is run.

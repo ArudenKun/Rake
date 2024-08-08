@@ -8,34 +8,34 @@
         <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <RuntimeIdentifiers>osx-x64;win-x64;linux-x64</RuntimeIdentifiers>
-        <Platform>x64</Platform>
-        <PlatformTarget>x64</PlatformTarget>
-<!--        <PublishAot>true</PublishAot>-->
+        <PublishAot>true</PublishAot>
         <NoWarn>$(NoWarn);SYSLIB0020;AVLN3001</NoWarn>
     </PropertyGroup>
-    
+
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**" />
+        <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AsyncImageLoader.Avalonia" />
-        <PackageReference Include="Avalonia.Desktop" />
-        <PackageReference Include="Avalonia.Fonts.Inter" />
+        <PackageReference Include="AsyncImageLoader.Avalonia"/>
+        <PackageReference Include="Avalonia.Desktop"/>
+        <PackageReference Include="Avalonia.Fonts.Inter"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
-        <PackageReference Include="Avalonia.Xaml.Behaviors" />
-        <PackageReference Include="CommunityToolkit.Mvvm" />
-        <PackageReference Include="FluentAvaloniaUI" />
-        <PackageReference Include="FluentIcons.Avalonia.Fluent" />
-        <PackageReference Include="ZiggyCreatures.FusionCache" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics"/>
+        <PackageReference Include="Avalonia.Xaml.Behaviors"/>
+        <PackageReference Include="CommunityToolkit.Mvvm"/>
+        <PackageReference Include="FluentAvaloniaUI"/>
+        <PackageReference Include="FluentIcons.Avalonia.Fluent"/>
+        <PackageReference Include="LibVLCSharp.Avalonia"/>
+        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" PrivateAssets="all"/>
+        <PackageReference Include="VideoLAN.LibVLC.Windows" Condition="$([MSBuild]::IsOSPlatform('Windows'))"/>
+        <PackageReference Include="WebViewControl-Avalonia" />
+        <PackageReference Include="ZiggyCreatures.FusionCache"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\CefGlue\CefGlue.Avalonia\CefGlue.Avalonia.csproj" />
-        <ProjectReference Include="..\CefGlue\CefGlue.Common.Shared\CefGlue.Common.Shared.csproj" />
-        <ProjectReference Include="..\CefGlue\CefGlue\CefGlue.csproj" />
-        <ProjectReference Include="..\Rake.Core\Rake.Core.csproj" />
-        <ProjectReference Include="..\Rake.Generator\Rake.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\CefGlue\CefGlue.BrowserProcess\CefGlue.BrowserProcess.csproj" />
+        <ProjectReference Include="..\Rake.Core\Rake.Core.csproj"/>
+        <ProjectReference Include="..\Rake.Generator\Rake.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 </Project>

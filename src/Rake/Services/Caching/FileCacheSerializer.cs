@@ -20,8 +20,10 @@ public class FileCacheSerializer(JsonSerializerOptions jsonSerializerOptions)
         return (T?)JsonSerializer.Deserialize(data, typeInfo);
     }
 
-    public async ValueTask<byte[]> SerializeAsync<T>(T? obj) =>
-        await Task.Run(() => Serialize(obj));
+    public async ValueTask<byte[]> SerializeAsync<T>(T? obj)
+    {
+        return await Task.Run(() => Serialize(obj));
+    }
 
     public async ValueTask<T?> DeserializeAsync<T>(byte[] data)
     {

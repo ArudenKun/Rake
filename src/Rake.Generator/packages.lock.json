@@ -4,12 +4,12 @@
     ".NETStandard,Version=v2.0": {
       "Avalonia": {
         "type": "Direct",
-        "requested": "[11.1.1, )",
-        "resolved": "11.1.1",
-        "contentHash": "DMMmA4iqLBQxqED5/VmDyBEq3Q5ufhjFDxFpotlrAosSA7o0q4Nl4kH/TVVwW7RFxboMKH0GJbygkICJmYRxMQ==",
+        "requested": "[11.1.2, )",
+        "resolved": "11.1.2",
+        "contentHash": "miSiFsbGqk+EXaaaeJd05Liw4MIhxxJPo52xqAcDgpjkgPySd8sn5apY8QWny9jRULxQFywEINSXLY9XY6s6ag==",
         "dependencies": {
           "Avalonia.BuildServices": "0.0.29",
-          "Avalonia.Remote.Protocol": "11.1.1",
+          "Avalonia.Remote.Protocol": "11.1.2",
           "MicroCom.Runtime": "0.11.0",
           "Microsoft.Bcl.AsyncInterfaces": "6.0.0",
           "System.ComponentModel.Annotations": "4.5.0",
@@ -92,8 +92,8 @@
       },
       "Avalonia.Remote.Protocol": {
         "type": "Transitive",
-        "resolved": "11.1.1",
-        "contentHash": "sqNJZ4MjDBXkV2vNQXEKyqGpUiwRbPycvGLhheGuZwABoLWV6syoCdrO2uuhDfTw5eVAC3J0farYo4m0BVRYng=="
+        "resolved": "11.1.2",
+        "contentHash": "LfuvlRM2KDcfEnyWaSrsCdVpxV+VdOV54f5VimlXh+GZ1b4pm4FJ5z/K2DiIIdLyG0tPh9D27A2LM/9FVnScwg=="
       },
       "MicroCom.Runtime": {
         "type": "Transitive",

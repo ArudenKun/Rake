@@ -23,7 +23,7 @@ public sealed partial class SettingsService : SettingsBase, ISettingsService
         ILogger<SettingsService> logger,
         JsonSerializerOptions jsonSerializerOptions
     )
-        : base(EnvironmentHelper.AppDataPath.JoinPath("settings.json"), jsonSerializerOptions)
+        : base(EnvironmentHelper.AppDataDirectory.JoinPath("settings.json"), jsonSerializerOptions)
     {
         _logger = logger;
     }

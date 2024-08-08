@@ -7,7 +7,7 @@ namespace Rake.Core.Helpers;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class BinariesHelper
 {
-    public static readonly string BinDir = EnvironmentHelper.AppDataPath.JoinPath("bin");
+    public static readonly string BinDir = EnvironmentHelper.AppDataDirectory.JoinPath("bin");
     public static readonly string YtDlpPluginsDir = BinDir.JoinPath("yt-dlp-plugins");
     public static string FFmpegFileName => GetFFmpegFileName();
     public static string YtDlpFileName => GetYtDlpFileName();

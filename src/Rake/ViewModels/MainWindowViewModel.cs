@@ -1,11 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
-using Avalonia.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Flurl;
-using Microsoft.Extensions.Logging;
-using Rake.Controls.Console;
 using Rake.Generator.Attributes;
 using Rake.ViewModels.Common;
 
@@ -14,26 +8,20 @@ namespace Rake.ViewModels;
 [Singleton]
 public partial class MainWindowViewModel : BaseViewModel
 {
-    private readonly ILogger<MainWindowViewModel> _logger;
-    [ObservableProperty] private string _greeting = "Test";
-    [ObservableProperty] private Url _address = "https://www.google.com/";
+    [ObservableProperty]
+    private Url _address = "https://www.google.com/";
 
-    public MainWindowViewModel(ILogger<MainWindowViewModel> logger)
-    {
-        _logger = logger;
+    [ObservableProperty]
+    private string _greeting = "Test";
 
-        // Address = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-    }
-    
-    [RelayCommand]
-    private async Task Initialized()
+    public MainWindowViewModel(MainViewModel mainViewModel)
     {
-        // while (true)
-        // {
-        //     await consoleView.ViewWriter.WriteAsync($"Test: {Random.Shared.Next()}");
-        //     await Task.Delay(TimeSpan.FromSeconds(3));
-        // }
-        // webView.Address = Address;
-        // webView.Url = Address.ToUri();
+        LibVLCSharp.Shared.Core.Initialize("");
+        CurrentContent = mainViewModel;
+
+        Address =
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     }
+
+    public object CurrentContent { get; }
 }

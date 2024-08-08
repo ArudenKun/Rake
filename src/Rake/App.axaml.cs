@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
+using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -8,6 +9,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Rake.Core.Extensions;
 using Rake.Services;
+using Rake.Services.Caching;
 using Rake.ViewModels;
 
 namespace Rake;
@@ -16,13 +18,24 @@ public sealed class App : Application, IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    private readonly MainWindowViewModel _mainWindowViewModel;
     private readonly ISettingsService _settingsService;
+    private readonly MainWindowViewModel _mainWindowViewModel;
+    private readonly FileCacheImageLoader _fileCacheImageLoader;
 
-    public App(ISettingsService settingsService, MainWindowViewModel mainWindowViewModel)
+    public App(
+        ISettingsService settingsService,
+        MainWindowViewModel mainWindowViewModel,
+        FileCacheImageLoader fileCacheImageLoader
+    )
     {
         _settingsService = settingsService;
         _mainWindowViewModel = mainWindowViewModel;
+        _fileCacheImageLoader = fileCacheImageLoader;
+    }
+
+    public void Dispose()
+    {
+        _disposables.Dispose();
     }
 
     public override void Initialize()
@@ -52,10 +65,8 @@ public sealed class App : Application, IDisposable
                 () => RequestedThemeVariant = _settingsService.ThemeVariant
             )
             .DisposeWith(_disposables);
-    }
 
-    public void Dispose()
-    {
-        _disposables.Dispose();
+        ImageLoader.AsyncImageLoader = _fileCacheImageLoader;
+        ImageBrushLoader.AsyncImageLoader = _fileCacheImageLoader;
     }
 }

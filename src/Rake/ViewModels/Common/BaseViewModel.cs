@@ -55,9 +55,15 @@ public abstract partial class BaseViewModel : ObservableValidator, IViewModel
 
     protected CompositeDisposable Disposables { get; } = new();
 
-    ~BaseViewModel() => Dispose(false);
+    ~BaseViewModel()
+    {
+        Dispose(false);
+    }
 
-    protected void OnAllPropertiesChanged() => OnPropertyChanged(string.Empty);
+    protected void OnAllPropertiesChanged()
+    {
+        OnPropertyChanged(string.Empty);
+    }
 
     protected virtual void Dispose(bool disposing) { }
 

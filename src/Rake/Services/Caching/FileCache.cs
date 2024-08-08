@@ -20,16 +20,16 @@ public sealed class FileCache : IFileCache
     private readonly Task _backgroundManifestSavingTask;
     private readonly Task _backgroundRemovingExpiredTask;
     private readonly ConcurrentDictionary<string, AsyncReaderWriterLock> _fileLock;
-
-    private readonly FileCacheOptions _options;
     private readonly ILogger<FileCache> _logger;
-    private readonly JsonTypeInfo _rootTypeInfo;
 
     private readonly SemaphoreSlim _manifestLock = new(1, 1);
     private readonly string _manifestPath;
     private readonly CancellationTokenSource _manifestSavingCancellationTokenSource;
 
+    private readonly FileCacheOptions _options;
+
     private readonly CancellationTokenSource _removingExpiredCancellationTokenSource;
+    private readonly JsonTypeInfo _rootTypeInfo;
 
     private ConcurrentDictionary<string, ManifestEntry>? _cacheManifest;
     private bool _disposed;
@@ -300,17 +300,21 @@ public sealed class FileCache : IFileCache
         return Task.Run(RemoveExpired);
     }
 
-    private void SerializeFile() =>
+    private void SerializeFile()
+    {
         File.WriteAllBytes(
             _manifestPath,
             JsonSerializer.SerializeToUtf8Bytes(_cacheManifest, _rootTypeInfo)
         );
+    }
 
-    private async Task SerializeFileAsync() =>
+    private async Task SerializeFileAsync()
+    {
         await File.WriteAllBytesAsync(
             _manifestPath,
             JsonSerializer.SerializeToUtf8Bytes(_cacheManifest, _rootTypeInfo)
         );
+    }
 
     private ConcurrentDictionary<string, ManifestEntry>? DeserializeFile()
     {

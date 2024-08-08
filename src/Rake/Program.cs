@@ -14,8 +14,7 @@ using Serilog;
 using Serilog.Enrichers.ClassName;
 using Serilog.Events;
 using Serilog.Sinks.FileEx;
-using Xilium.CefGlue;
-using Xilium.CefGlue.Common;
+using WebViewControl;
 using ZiggyCreatures.Caching.Fusion;
 using ZiggyCreatures.Caching.Fusion.Serialization;
 
@@ -37,7 +36,7 @@ public static class Program
         services.AddSingleton<IJsonTypeInfoResolver>(AppJsonContext.Default);
         services.AddSingleton(AppJsonContext.Default.Options);
         services.AddSingleton<IDistributedCache>(sp => new FileCache(
-            new FileCacheOptions(EnvironmentHelper.AppDataPath.JoinPath("cache")),
+            new FileCacheOptions(EnvironmentHelper.AppDataDirectory.JoinPath("cache", "file")),
             sp.GetRequiredService<ILogger<FileCache>>(),
             sp.GetRequiredService<JsonSerializerOptions>()
         ));
@@ -54,6 +53,12 @@ public static class Program
 
         services.AddCore();
         services.AddLogging(builder => builder.ClearProviders().AddSerilog(dispose: true));
+
+        WebView.Settings.CachePath = EnvironmentHelper.AppDataDirectory.JoinPath(
+            "cache",
+            "cefglue"
+        );
+        WebView.Settings.OsrEnabled = false;
 
         Services = services.BuildServiceProvider();
         Logger = Services.GetRequiredService<ILogger<App>>();
@@ -86,16 +91,14 @@ public static class Program
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
-    public static AppBuilder BuildAvaloniaApp() =>
-        AppBuilder
+    public static AppBuilder BuildAvaloniaApp()
+    {
+        return AppBuilder
             .Configure(() => Services.GetRequiredService<App>())
             .UsePlatformDetect()
-            .AfterSetup(_ => CefRuntimeLoader.Initialize(new CefSettings
-            {
-                RootCachePath = EnvironmentHelper.AppDataPath.JoinPath("cache", "chrome")
-            }))
             .WithInterFont()
             .LogToTrace();
+    }
 
     #region Logging
 
@@ -103,7 +106,7 @@ public static class Program
     {
         const string logTemplate =
             "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {ClassName}] {Message:lj} {NewLine}{Exception}";
-        var logsPath = EnvironmentHelper.AppDataPath.JoinPath("logs");
+        var logsPath = EnvironmentHelper.AppDataDirectory.JoinPath("logs");
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Is(IsDebug ? LogEventLevel.Debug : LogEventLevel.Warning)

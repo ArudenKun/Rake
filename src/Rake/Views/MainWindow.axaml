@@ -2,12 +2,10 @@
     x:Class="Rake.Views.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:behaviors="clr-namespace:Rake.Behaviors"
     xmlns:converters="clr-namespace:Rake.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:uiw="using:FluentAvalonia.UI.Windowing"
-    xmlns:views="clr-namespace:Rake.Views"
     xmlns:vm="using:Rake.ViewModels"
     Title="Rake"
     d:DesignHeight="450"
@@ -15,25 +13,6 @@
     x:DataType="vm:MainWindowViewModel"
     Icon="/Assets/avalonia-logo.ico"
     mc:Ignorable="d">
-    <uiw:AppWindow.Resources>
-        <converters:MultiValueConverter x:Key="MultiValueConverter" />
-    </uiw:AppWindow.Resources>
-    <Grid RowDefinitions="Auto, *">
-        <TextBlock
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Text="{Binding Greeting}" />
-        <!-- <webViewControl:WebView Grid.Row="1" Address="google.com" /> -->
-        <views:BrowserView Grid.Row="1" />
-        <!--  <ConsoleView  -->
-        <!--  x:Name="ConsoleView"  -->
-        <!--  Grid.Row="1"  -->
-        <!--  VerticalAlignment="Stretch"  -->
-        <!--  VerticalContentAlignment="Stretch" />  -->
-        <!-- <Interaction.Behaviors> -->
-        <!--     <behaviors:ControlLoadedBehavior> -->
-        <!--         <InvokeCommandAction Command="{Binding InitializedCommand}" CommandParameter="{Binding #ConsoleView}" /> -->
-        <!--     </behaviors:ControlLoadedBehavior> -->
-        <!-- </Interaction.Behaviors> -->
-    </Grid>
+    <uiw:AppWindow.Resources />
+    <ContentControl Content="{Binding CurrentContent}" />
 </uiw:AppWindow>

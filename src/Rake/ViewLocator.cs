@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -19,24 +18,21 @@ public sealed partial class ViewLocator
         var viewModelType = viewModel.GetType();
 
         if (!ViewMap.TryGetValue(viewModelType, out var factory))
-        {
             return new TextBlock { Text = $"No view registered for {viewModelType.FullName}" };
-        }
 
         var control = factory(viewModel);
         control.DataContext = viewModel;
-        RegisterViewModelEvents(viewModel, control);
+        RegisterEvents((IViewModel)viewModel, control);
         return control;
     }
 
-    public bool Match(object? data) => data is INotifyPropertyChanged;
-
-    private static void RegisterViewModelEvents(object viewModel, Control control)
+    public bool Match(object? data)
     {
-        // ReSharper disable once SuspiciousTypeConversion.Global
-        if (viewModel is not IViewModelEvents viewModelEvents)
-            return;
+        return data is IViewModel;
+    }
 
+    private static void RegisterEvents(IViewModel viewModel, Control control)
+    {
         control = control ?? throw new ArgumentNullException(nameof(control));
 
         control.Loaded += Loaded;
@@ -48,12 +44,12 @@ public sealed partial class ViewLocator
 
         void Loaded(object? sender, RoutedEventArgs e)
         {
-            viewModelEvents?.Loaded();
+            viewModel?.Loaded();
         }
 
         void Unloaded(object? sender, RoutedEventArgs e)
         {
-            viewModelEvents?.Unloaded();
+            viewModel?.Unloaded();
 
             control.Loaded -= Loaded;
             control.Unloaded -= Unloaded;
@@ -61,12 +57,12 @@ public sealed partial class ViewLocator
 
         void AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
-            viewModelEvents.AttachedToVisualTree();
+            viewModel.AttachedToVisualTree();
         }
 
         void DetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
-            viewModelEvents.DetachedFromVisualTree();
+            viewModel.DetachedFromVisualTree();
 
             control.AttachedToVisualTree -= AttachedToVisualTree;
             control.DetachedFromVisualTree -= DetachedFromVisualTree;

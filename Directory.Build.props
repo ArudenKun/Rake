@@ -5,7 +5,7 @@
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <DefineConstants>$(DefineConstants);HAS_AVALONIA</DefineConstants>
     </PropertyGroup>
-    
+
     <PropertyGroup>
         <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
         <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
@@ -20,5 +20,17 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(IsLinux)'=='true'">
         <DefineConstants>$(DefineConstants);__LINUX__</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <WebViewTargetPlatform>win</WebViewTargetPlatform>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <WebViewTargetPlatform>osx</WebViewTargetPlatform>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <WebViewTargetPlatform>linux</WebViewTargetPlatform>
     </PropertyGroup>
 </Project>

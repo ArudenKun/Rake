@@ -51,12 +51,14 @@ public sealed class FileCacheImageLoader : IAsyncImageLoader
     public void Dispose() { }
 
     /// <summary>
-    /// the url maybe is local file url,so if file exists ,we got a Bitmap
+    ///     the url maybe is local file url,so if file exists ,we got a Bitmap
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    private static Task<Bitmap?> LoadFromLocalAsync(string url) =>
-        Task.FromResult(File.Exists(url) ? new Bitmap(url) : null);
+    private static Task<Bitmap?> LoadFromLocalAsync(string url)
+    {
+        return Task.FromResult(File.Exists(url) ? new Bitmap(url) : null);
+    }
 
     /// <summary>
     ///     Receives image bytes from an internal source (for example, from the disk).
