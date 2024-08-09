@@ -1,3 +1,0 @@
-[submodule "CefGlue"]
-	path = src/CefGlue
-	url = https://github.com/OutSystems/CefGlue

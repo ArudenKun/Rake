@@ -1,149 +1,105 @@
-﻿using System;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using Avalonia;
-using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.Caching.Distributed;
+using System.Windows;
+using Dapplo.Microsoft.Extensions.Hosting.Wpf;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Rake.Core.Helpers;
-using Rake.Generator.DependencyInjection;
+using Rake.Generators.DependencyInjection;
 using Rake.Services;
-using Rake.Services.Caching;
+using Rake.Views;
 using Serilog;
 using Serilog.Enrichers.ClassName;
 using Serilog.Events;
 using Serilog.Sinks.FileEx;
-using WebViewControl;
-using ZiggyCreatures.Caching.Fusion;
-using ZiggyCreatures.Caching.Fusion.Serialization;
+using Velopack;
+using Wpf.Ui;
 
 namespace Rake;
 
 public static class Program
 {
-    private static readonly ServiceProvider Services;
-    private static readonly ILogger<App> Logger;
-
-    static Program()
-    {
-        ConfigureLogging();
-        var services = new ServiceCollection();
-
-        services.AddSingleton<App>();
-        services.AddSingleton<ISettingsService, SettingsService>();
-        services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
-        services.AddSingleton<IJsonTypeInfoResolver>(AppJsonContext.Default);
-        services.AddSingleton(AppJsonContext.Default.Options);
-        services.AddSingleton<IDistributedCache>(sp => new FileCache(
-            new FileCacheOptions(EnvironmentHelper.AppDataDirectory.JoinPath("cache", "file")),
-            sp.GetRequiredService<ILogger<FileCache>>(),
-            sp.GetRequiredService<JsonSerializerOptions>()
-        ));
-        services.AddSingleton<FileCacheImageLoader>();
-        services.AddSingleton<IFusionCacheSerializer, FileCacheSerializer>();
-        services
-            .AddFusionCache()
-            .WithDefaultEntryOptions(opt =>
-                opt.SetDuration(TimeSpan.FromMinutes(5))
-                    .SetFailSafe(true)
-                    .SetFactoryTimeouts(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30))
-            )
-            .TryWithAutoSetup();
-
-        services.AddCore();
-        services.AddLogging(builder => builder.ClearProviders().AddSerilog(dispose: true));
-
-        WebView.Settings.CachePath = EnvironmentHelper.AppDataDirectory.JoinPath(
-            "cache",
-            "cefglue"
-        );
-        WebView.Settings.OsrEnabled = false;
-
-        Services = services.BuildServiceProvider();
-        Logger = Services.GetRequiredService<ILogger<App>>();
-    }
-
-    // Initialization code. Don't use any Avalonia, third-party APIs or any
-    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-    // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args)
     {
-        var app = BuildAvaloniaApp();
+        var host = Host.CreateDefaultBuilder(args)
+            .ConfigureServices(services =>
+            {
+                services.AddCore();
+                services.AddSingleton<IThemeService, ThemeService>();
+                services.AddSingleton<ITaskBarService, TaskBarService>();
+                services.AddSingleton<INavigationService, NavigationService>();
+                services.AddSingleton<IPageService, PageService>();
+                services.AddSingleton<INavigationWindow>(sp => sp.GetRequiredService<MainWindow>());
+                services.AddSingleton<IWpfShell>(sp => sp.GetRequiredService<MainWindow>());
+            })
+            .ConfigureWpf(builder => builder.UseApplication<App>())
+            .UseWpfLifetime()
+#if DEBUG
+            .UseEnvironment(Environments.Development)
+#endif
+            .UseSerilog(
+                (context, configuration) =>
+                {
+                    #region Logging
+
+                    const string logTemplate =
+                        "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {ClassName}] {Message:lj} {NewLine}{Exception}";
+                    var logsPath = EnvironmentHelper.AppDataDirectory.JoinPath("logs");
+
+                    configuration
+                        .MinimumLevel.Is(
+                            context.HostingEnvironment.IsDevelopment()
+                                ? LogEventLevel.Debug
+                                : LogEventLevel.Information
+                        )
+                        .WriteTo.Console(outputTemplate: logTemplate)
+                        .WriteTo.Async(x =>
+                            x.FileEx(
+                                logsPath.JoinPath(
+                                    $"logs{(context.HostingEnvironment.IsDevelopment() ? ".debug" : "")}.txt"
+                                ),
+                                ".dd-MM-yyyy",
+                                outputTemplate: logTemplate,
+                                rollingInterval: RollingInterval.Day,
+                                rollOnEachProcessRun: false,
+                                rollOnFileSizeLimit: true,
+                                preserveLogFileName: true,
+                                shared: true
+                            )
+                        )
+                        .WriteTo.FileEx(
+                            logsPath.JoinPath("logs.error.txt"),
+                            outputTemplate: logTemplate,
+                            rollingInterval: RollingInterval.Day,
+                            rollOnEachProcessRun: false,
+                            rollOnFileSizeLimit: true,
+                            preserveLogFileName: true,
+                            shared: true,
+                            restrictedToMinimumLevel: LogEventLevel.Fatal
+                        )
+                        .Enrich.FromLogContext()
+                        .Enrich.WithClassName();
+
+                    #endregion
+                }
+            )
+            .UseConsoleLifetime()
+            .Build();
 
         try
         {
-            Logger.LogInformation("App Started");
-            app.StartWithClassicDesktopLifetime(args);
+            VelopackApp.Build().Run();
+            host.Run();
         }
         catch (Exception e)
         {
-            Logger.LogError(e, "An Error Occured");
+            MessageBox.Show(e.Message, "A Fatal Error Occured");
             throw;
         }
         finally
         {
-            Services.Dispose();
-            Logger.LogInformation("App Exited");
+            host.StopAsync();
+            host.Dispose();
             Log.CloseAndFlush();
         }
     }
-
-    // Avalonia configuration, don't remove; also used by visual designer.
-    public static AppBuilder BuildAvaloniaApp()
-    {
-        return AppBuilder
-            .Configure(() => Services.GetRequiredService<App>())
-            .UsePlatformDetect()
-            .WithInterFont()
-            .LogToTrace();
-    }
-
-    #region Logging
-
-    private static void ConfigureLogging()
-    {
-        const string logTemplate =
-            "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {ClassName}] {Message:lj} {NewLine}{Exception}";
-        var logsPath = EnvironmentHelper.AppDataDirectory.JoinPath("logs");
-
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Is(IsDebug ? LogEventLevel.Debug : LogEventLevel.Warning)
-            .WriteTo.Console(outputTemplate: logTemplate)
-            .WriteTo.Async(x =>
-                x.FileEx(
-                    logsPath.JoinPath($"logs{(IsDebug ? ".debug" : "")}.txt"),
-                    ".dd-MM-yyyy",
-                    outputTemplate: logTemplate,
-                    rollingInterval: RollingInterval.Day,
-                    rollOnEachProcessRun: false,
-                    rollOnFileSizeLimit: true,
-                    preserveLogFileName: true,
-                    shared: true
-                )
-            )
-            .WriteTo.FileEx(
-                logsPath.JoinPath("logs.error.txt"),
-                outputTemplate: logTemplate,
-                rollingInterval: RollingInterval.Day,
-                rollOnEachProcessRun: false,
-                rollOnFileSizeLimit: true,
-                preserveLogFileName: true,
-                shared: true,
-                restrictedToMinimumLevel: LogEventLevel.Fatal
-            )
-            .Enrich.FromLogContext()
-            .Enrich.WithClassName()
-            .CreateLogger();
-    }
-
-    private static bool IsDebug
-#if DEBUG
-        => true;
-#else
-        => false;
-#endif
-
-    #endregion
 }

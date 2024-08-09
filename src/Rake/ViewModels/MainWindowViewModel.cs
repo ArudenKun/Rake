@@ -1,27 +1,53 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Flurl;
-using Rake.Generator.Attributes;
-using Rake.ViewModels.Common;
+using System.Collections.ObjectModel;
+using Rake.ViewModels.Abstractions;
+using Rake.Views.Pages;
+using Wpf.Ui;
+using Wpf.Ui.Controls;
 
 namespace Rake.ViewModels;
 
-[Singleton]
-public partial class MainWindowViewModel : BaseViewModel
+public class MainWindowViewModel : BaseViewModel
 {
-    [ObservableProperty]
-    private Url _address = "https://www.google.com/";
+    public INavigationService NavigationService { get; }
+    public IPageService PageService { get; }
+    public IServiceProvider ServiceProvider { get; }
 
-    [ObservableProperty]
-    private string _greeting = "Test";
+    public ObservableCollection<NavigationViewItem> Menus { get; } = [];
+    public ObservableCollection<NavigationViewItem> Footers { get; } = [];
 
-    public MainWindowViewModel(MainViewModel mainViewModel)
+    public MainWindowViewModel(
+        INavigationService navigationService,
+        IPageService pageService,
+        IServiceProvider serviceProvider,
+        IEnumerable<BasePageViewModel> pageViewModels
+    )
     {
-        LibVLCSharp.Shared.Core.Initialize("");
-        CurrentContent = mainViewModel;
+        NavigationService = navigationService;
+        PageService = pageService;
+        ServiceProvider = serviceProvider;
 
-        Address =
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+        foreach (var pageViewModel in pageViewModels.OrderBy(x => x.Index))
+        {
+            var nvi = new NavigationViewItem(
+                pageViewModel.Name,
+                pageViewModel.Icon,
+                pageViewModel.ViewType
+            );
+
+            if (!pageViewModel.IsFooter)
+            {
+                Menus.Add(nvi);
+                continue;
+            }
+
+            Footers.Add(nvi);
+        }
     }
 
-    public object CurrentContent { get; }
+    protected override void Loaded()
+    {
+        NavigationService.Navigate(Menus[0].TargetPageType!);
+    }
+
+    public string Greetings => nameof(Greetings);
 }
