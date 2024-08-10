@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using H.Generators.Extensions;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Rake.Generators.Abstractions;
 using Rake.Generators.Attributes;
@@ -14,7 +11,7 @@ using Rake.Generators.Utilities;
 
 namespace Rake.Generators;
 
-[Generator]
+// [Generator]
 internal sealed class ConstructorGenerator : GeneratorForMember<ClassDeclarationSyntax>
 {
     protected override string Id => "CG";

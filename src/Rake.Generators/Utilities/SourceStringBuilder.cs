@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text;
-using Microsoft.CodeAnalysis;
 using Rake.Generators.Extensions;
 
 namespace Rake.Generators.Utilities;

@@ -1,11 +1,7 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using H.Generators.Extensions;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Rake.Generators.Abstractions;
 using Rake.Generators.Attributes;
@@ -30,11 +26,11 @@ internal sealed class DependencyInjectionGenerator : GeneratorForMember<ClassDec
                 {
                     public static partial class ServiceCollectionExtensions
                     {
-                        static partial void AddViewsAndViewModels(IServiceCollection services);
+                        static partial void AddViewModels(IServiceCollection services);
                     
-                        public static IServiceCollection AddCore(this IServiceCollection services)
+                        public static IServiceCollection AddGenerated(this IServiceCollection services)
                         {
-                            AddViewsAndViewModels(services);
+                            AddViewModels(services);
                             return services;
                         }
                     }
@@ -61,7 +57,7 @@ internal sealed class DependencyInjectionGenerator : GeneratorForMember<ClassDec
     {
         var targetSymbol = Compilation.GetTypeByMetadataName(Meta.ObservableObject);
 
-        var viewModelSymbols = GetAll<INamedTypeSymbol>(nodes)
+        var viewModels = GetAll<INamedTypeSymbol>(nodes)
             .Where(x => !x.IsAbstract)
             .Where(x => !x.HasAttribute<IgnoreAttribute>())
             .Where(x => x.Name.EndsWith("ViewModel"))
@@ -82,41 +78,25 @@ internal sealed class DependencyInjectionGenerator : GeneratorForMember<ClassDec
                 source.Line("public static partial class ServiceCollectionExtensions");
                 source.BlockBrace(() =>
                 {
-                    source.Line(
-                        "static partial void AddViewsAndViewModels(IServiceCollection services)"
-                    );
+                    source.Line("static partial void AddViewModels(IServiceCollection services)");
                     source.BlockBrace(() =>
                     {
-                        var count = 0;
-                        foreach (var viewModelSymbol in viewModelSymbols)
+                        foreach (var viewModel in viewModels)
                         {
-                            var viewSymbol = GetView(viewModelSymbol);
+                            source.Line(
+                                viewModel.HasAttribute<SingletonAttribute>()
+                                    ? $"services.AddSingleton<{viewModel.ToFullDisplayString()}>();"
+                                    : $"services.AddTransient<{viewModel.ToFullDisplayString()}>();"
+                            );
 
-                            if (viewSymbol is null)
+                            if (viewModel.BaseType is not { } viewModelBaseType)
                                 continue;
 
                             source.Line(
-                                viewModelSymbol.HasAttribute<SingletonAttribute>()
-                                    ? $"services.AddSingleton<{viewModelSymbol.ToFullDisplayString()}>();"
-                                    : $"services.AddTransient<{viewModelSymbol.ToFullDisplayString()}>();"
+                                viewModel.HasAttribute<SingletonAttribute>()
+                                    ? $"services.AddSingleton<{viewModelBaseType.ToFullDisplayString()}>(sp => sp.GetRequiredService<{viewModel.ToFullDisplayString()}>());"
+                                    : $"services.AddTransient<{viewModelBaseType.ToFullDisplayString()}>(sp => sp.GetRequiredService<{viewModel.ToFullDisplayString()}>());"
                             );
-                            if (viewModelSymbol.BaseType is { } viewModelBaseTypeSymbol)
-                            {
-                                source.Line(
-                                    viewModelSymbol.HasAttribute<SingletonAttribute>()
-                                        ? $"services.AddSingleton<{viewModelBaseTypeSymbol.ToFullDisplayString()}>(sp => sp.GetRequiredService<{viewModelSymbol.ToFullDisplayString()}>());"
-                                        : $"services.AddTransient<{viewModelBaseTypeSymbol.ToFullDisplayString()}>(sp => sp.GetRequiredService<{viewModelSymbol.ToFullDisplayString()}>());"
-                                );
-                            }
-
-                            source.Line(
-                                $"services.AddTransient(sp => new {viewSymbol.ToFullDisplayString()}(sp.GetRequiredService<{viewModelSymbol.ToFullDisplayString()}>()));"
-                            );
-
-                            if (++count != viewModelSymbols.Length)
-                            {
-                                source.Line();
-                            }
                         }
                     });
                 });
@@ -124,18 +104,5 @@ internal sealed class DependencyInjectionGenerator : GeneratorForMember<ClassDec
         );
 
         return new FileWithName($"{Meta.DependencyInjectionNamespace}.i.g.cs", source.ToString());
-    }
-
-    private INamedTypeSymbol? GetView(ISymbol viewModelSymbol)
-    {
-        var viewName = viewModelSymbol.ToDisplayString().Replace("ViewModel", "View");
-        var viewSymbol = Compilation.GetTypeByMetadataName(viewName);
-
-        if (viewSymbol is not null)
-            return viewSymbol;
-
-        viewName = viewModelSymbol.ToDisplayString().Replace(".ViewModels.", ".Views.");
-        viewName = viewName.Remove(viewName.IndexOf("ViewModel", StringComparison.Ordinal));
-        return Compilation.GetTypeByMetadataName(viewName);
     }
 }

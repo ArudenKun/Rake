@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Rake.Generators.Abstractions;
@@ -13,7 +10,7 @@ internal abstract class GeneratorForTypeWithAttribute<TAttribute> : GeneratorFor
 }
 
 internal abstract class GeneratorForTypeWithAttribute
-    : GeneratorForMemberWithAttribute<ClassDeclarationSyntax>
+    : GeneratorForMemberWithAttribute<TypeDeclarationSyntax>
 {
     protected sealed override string GenerateCode(
         SyntaxNode node,

@@ -53,6 +53,12 @@
           "System.Threading.Tasks.Extensions": "4.5.4"
         }
       },
+      "Microsoft.Extensions.ObjectPool": {
+        "type": "Direct",
+        "requested": "[8.0.7, )",
+        "resolved": "8.0.7",
+        "contentHash": "2yLweyqmpuuFSRo+I3sLHMxmnAgNcI537kBJiyv49U2ZEqo00jZcG8lrnD8uCiOJp9IklYyTZULtbsXoFVzsjQ=="
+      },
       "NETStandard.Library": {
         "type": "Direct",
         "requested": "[2.0.3, )",

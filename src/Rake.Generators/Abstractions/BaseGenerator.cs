@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Rake.Generators.Extensions;
 
 namespace Rake.Generators.Abstractions;

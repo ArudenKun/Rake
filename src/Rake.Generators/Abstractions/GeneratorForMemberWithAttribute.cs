@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using H.Generators.Extensions;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Rake.Generators.Extensions;
 
@@ -22,6 +19,11 @@ internal abstract class GeneratorForMemberWithAttribute<TDeclarationSyntax>
     protected override Compilation Compilation => _compilation;
     protected abstract string GetTargetAttribute();
 
+    protected virtual bool? Predicate(SyntaxNode syntaxNode, CancellationToken cancellationToken)
+    {
+        return null;
+    }
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         foreach (var (name, source) in StaticSources)
@@ -29,10 +31,10 @@ internal abstract class GeneratorForMemberWithAttribute<TDeclarationSyntax>
 
         var syntaxProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
             GetTargetAttribute(),
-            (node, _) => node is TDeclarationSyntax { AttributeLists.Count: > 0 },
+            (node, token) =>
+                Predicate(node, token) ?? node is TDeclarationSyntax { AttributeLists.Count: > 0 },
             (syntaxContext, _) => syntaxContext
         );
-
         context
             .CompilationProvider.Combine(syntaxProvider.Collect())
             .Combine(context.AnalyzerConfigOptionsProvider)

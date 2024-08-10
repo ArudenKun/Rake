@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using H.Generators.Extensions;
-using Microsoft.CodeAnalysis;
 
 namespace Rake.Generators.Extensions;
 

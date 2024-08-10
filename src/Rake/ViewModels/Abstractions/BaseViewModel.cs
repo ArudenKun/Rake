@@ -1,48 +1,44 @@
-using System.Windows;
+﻿using System;
+using System.Reactive.Disposables;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Rake.Generators;
-using Wpf.Ui.Controls;
 
 namespace Rake.ViewModels.Abstractions;
 
 [ObservableRecipient]
-public abstract partial class BaseViewModel : ObservableValidator, INavigationAware, IActivatable
+public abstract partial class BaseViewModel : ObservableValidator, IViewModel
 {
-    public void Activate()
+    protected CompositeDisposable Disposables { get; } = new();
+
+    public void Loaded()
     {
-        Loaded();
+        OnLoaded();
     }
 
-    public void Deactivate()
+    public void Unloaded()
     {
-        UnLoaded();
+        OnUnloaded();
     }
 
-    protected virtual void Loaded() { }
-
-    protected virtual void UnLoaded() { }
-
-    /// <inheritdoc cref="OnNavigatedTo"/>
-    public virtual async Task OnNavigatedToAsync()
+    public void AttachedToVisualTree()
     {
-        using CancellationTokenSource cts = new();
-
-        await DispatchAsync(OnNavigatedTo, cts.Token);
+        OnAttachedToVisualTree();
     }
 
-    /// <inheritdoc />
-    public virtual void OnNavigatedTo() { }
-
-    /// <inheritdoc cref="OnNavigatedFrom"/>
-    public virtual async Task OnNavigatedFromAsync()
+    public void DetachedFromVisualTree()
     {
-        using CancellationTokenSource cts = new();
-
-        await DispatchAsync(OnNavigatedFrom, cts.Token);
+        OnDetachedFromVisualTree();
     }
 
-    /// <inheritdoc />
-    public virtual void OnNavigatedFrom() { }
+    protected virtual void OnLoaded() { }
+
+    protected virtual void OnUnloaded() { }
+
+    protected virtual void OnAttachedToVisualTree() { }
+
+    protected virtual void OnDetachedFromVisualTree() { }
 
     /// <summary>
     /// Dispatches the specified action on the UI thread.
@@ -57,6 +53,25 @@ public abstract partial class BaseViewModel : ObservableValidator, INavigationAw
             return;
         }
 
-        await Application.Current.Dispatcher.InvokeAsync(action);
+        await Dispatcher.UIThread.InvokeAsync(action);
+    }
+
+    ~BaseViewModel()
+    {
+        Dispose(false);
+    }
+
+    protected void OnAllPropertiesChanged()
+    {
+        OnPropertyChanged(string.Empty);
+    }
+
+    protected virtual void Dispose(bool disposing) { }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        Disposables.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

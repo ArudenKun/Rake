@@ -1,12 +1,13 @@
-using Wpf.Ui.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Material.Icons;
 
 namespace Rake.ViewModels.Abstractions;
 
-public abstract class BasePageViewModel : BaseViewModel
+public abstract partial class BasePageViewModel : BaseViewModel, IPageViewModel
 {
-    public virtual string Name => GetType().Name.Replace("PageViewModel", string.Empty);
-    public virtual int Index { get; } = 0;
-    public virtual bool IsFooter { get; } = false;
-    public virtual SymbolRegular Icon { get; } = SymbolRegular.Home24;
-    public abstract Type ViewType { get; }
+    [ObservableProperty]
+    private bool _isPageActive;
+    public virtual int PageIndex => 1;
+    public virtual string PageName => GetType().Name.Replace("PageViewModel", string.Empty);
+    public virtual MaterialIconKind PageIconKind => MaterialIconKind.Home;
 }

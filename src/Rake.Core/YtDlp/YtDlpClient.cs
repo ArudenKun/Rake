@@ -1,4 +1,4 @@
-﻿using System.Reactive.Disposables;
+using System.Reactive.Disposables;
 using AutoInterfaceAttributes;
 using CliWrap;
 using Rake.Core.Helpers;

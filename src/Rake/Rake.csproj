@@ -1,60 +1,43 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <UseWPF>true</UseWPF>
-        <Platforms>x64</Platforms>
-        <PlatformTarget>x64</PlatformTarget>
-        <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-        <DefineConstants>$(DefineConstants);HAS_WPF</DefineConstants>
-        <StartupObject>Rake.Program</StartupObject>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <RuntimeIdentifiers>osx-x64;win-x64;linux-x64</RuntimeIdentifiers>
+        <PublishAot>true</PublishAot>
+        <NoWarn>$(NoWarn);SYSLIB0020;AVLN3001</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
+        <AvaloniaResource Include="Assets\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AnimatedImage.Avalonia" />
+        <PackageReference Include="AsyncImageLoader.Avalonia"/>
+        <PackageReference Include="Avalonia.Desktop"/>
+        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics"/>
+        <PackageReference Include="Avalonia.Xaml.Behaviors"/>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
-        <PackageReference Include="CompiledBindings.WPF"/>
-        <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.AppServices" />
-        <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.Plugins"/>
-        <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.Wpf"/>
-        <PackageReference Include="FFME.Windows" />
-        <PackageReference Include="Microsoft.Extensions.Hosting"/>
-        <PackageReference Include="Microsoft.Web.WebView2"/>
-        <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf"/>
-        <PackageReference Include="Serilog.Extensions.Hosting"/>
+        <PackageReference Include="Material.Icons.Avalonia" />
+        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" />
         <PackageReference Include="Velopack" />
-        <PackageReference Include="WPF-UI"/>
-        <PackageReference Include="WPF-UI.Tray"/>
+        <PackageReference Include="ZiggyCreatures.FusionCache"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Controls\" />
-        <Folder Include="Extensions\"/>
-    </ItemGroup>
-    
-    <Target Name="Copy Libs Before Build" BeforeTargets="PreBuildEvent">
-        <ItemGroup>
-            <FFmpegFiles Include="$(RootDir)libs\ffmpeg\**\*.*" />
-            <YtDlpFiles Include="$(RootDir)libs\yt-dlp\**\*.*" />
-        </ItemGroup>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(FFmpegFiles)" DestinationFolder="$(OutDir)\ffmpeg\%(RecursiveDir)"/>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(YtDlpFiles)" DestinationFolder="$(OutDir)\yt-dlp\%(RecursiveDir)"/>
-    </Target>
-
-    <Target Name="Copy Libs Before Publish" BeforeTargets="PrepareForPublish">
-        <ItemGroup>
-            <FFmpegFiles Include="$(RootDir)libs\ffmpeg\**\*.*" />
-            <YtDlpFiles Include="$(RootDir)libs\yt-dlp\**\*.*" />
-        </ItemGroup>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(FFmpegFiles)" DestinationFolder="$(PublishDir)\ffmpeg\%(RecursiveDir)"/>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(YtDlpFiles)" DestinationFolder="$(PublishDir)\yt-dlp\%(RecursiveDir)"/>
-    </Target>
-
-    <ItemGroup>
+        <ProjectReference Include="..\..\external\SukiUI\SukiUI\SukiUI.csproj" />
         <ProjectReference Include="..\Rake.Core\Rake.Core.csproj"/>
         <ProjectReference Include="..\Rake.Generators\Rake.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Styles\" />
     </ItemGroup>
 
 </Project>
