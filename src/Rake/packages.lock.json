@@ -89,11 +89,37 @@
         "resolved": "8.0.7",
         "contentHash": "iI52ptEKby2ymQ6B7h4TWbFmm85T4VvLgc/HvS45Yr3lgi4IIFbQtjON3bQbX/Vc94jXNSLvrDOp5Kh7SJyFYQ=="
       },
+      "Microsoft.Web.WebView2": {
+        "type": "Direct",
+        "requested": "[1.0.2592.51, )",
+        "resolved": "1.0.2592.51",
+        "contentHash": "AC9aWCthS2JvddYA1jl4dFpLBW3GsLRInhp5dkcBzaFXsRehfoUN9olIUsrH41eNaNYd7z9NRvmy81aUA5aD1g=="
+      },
+      "Microsoft.Windows.CsWin32": {
+        "type": "Direct",
+        "requested": "[0.3.106, )",
+        "resolved": "0.3.106",
+        "contentHash": "Mx5fK7uN6fwLR4wUghs6//HonAnwPBNmC2oonyJVhCUlHS/r6SUS3NkBc3+gaQiv+0/9bqdj1oSCKQFkNI+21Q==",
+        "dependencies": {
+          "Microsoft.Windows.SDK.Win32Docs": "0.1.42-alpha",
+          "Microsoft.Windows.SDK.Win32Metadata": "60.0.34-preview",
+          "Microsoft.Windows.WDK.Win32Metadata": "0.11.4-experimental"
+        }
+      },
       "ReactiveMarbles.ObservableEvents.SourceGenerator": {
         "type": "Direct",
         "requested": "[1.3.1, )",
         "resolved": "1.3.1",
         "contentHash": "Yog8Af0hYb0jLMMNupkTS1Cjf/oLT637zDysQwlVbJoZJ8QgKWr6NV7dyoqZ8sQtWPOS6R4JQ+dXd3YqUjesxw=="
+      },
+      "Tabalonia": {
+        "type": "Direct",
+        "requested": "[0.10.4, )",
+        "resolved": "0.10.4",
+        "contentHash": "A2D60UVQ97Jcf0tqlbpqoyimhvgCa9J2Vbr/WITgGhW6yLa+PDkL3jI+EQpCar2Eeq0etSQUeXm4deC9b82xYA==",
+        "dependencies": {
+          "Avalonia": "11.0.0"
+        }
       },
       "Velopack": {
         "type": "Direct",
@@ -399,6 +425,24 @@
         "resolved": "8.0.0",
         "contentHash": "bXJEZrW9ny8vjMF1JV253WeLhpEVzFo1lyaZu1vQ4ZxWUlVvknZ/+ftFgVheLubb4eZPSwwxBeqS1JkCOjxd8g=="
       },
+      "Microsoft.Windows.SDK.Win32Docs": {
+        "type": "Transitive",
+        "resolved": "0.1.42-alpha",
+        "contentHash": "Z/9po23gUA9aoukirh2ItMU2ZS9++Js9Gdds9fu5yuMojDrmArvY2y+tq9985tR3cxFxpZO1O35Wjfo0khj5HA=="
+      },
+      "Microsoft.Windows.SDK.Win32Metadata": {
+        "type": "Transitive",
+        "resolved": "60.0.34-preview",
+        "contentHash": "TA3DUNi4CTeo+ItTXBnGZFt2159XOGSl0UOlG5vjDj4WHqZjhwYyyUnzOtrbCERiSaP2Hzg7otJNWwOSZgutyA=="
+      },
+      "Microsoft.Windows.WDK.Win32Metadata": {
+        "type": "Transitive",
+        "resolved": "0.11.4-experimental",
+        "contentHash": "bf5MCmUyZf0gBlYQjx9UpRAZWBkRndyt9XicR+UNLvAUAFTZQbu6YaX/sNKZlR98Grn0gydfh/yT4I3vc0AIQA==",
+        "dependencies": {
+          "Microsoft.Windows.SDK.Win32Metadata": "60.0.34-preview"
+        }
+      },
       "Nito.AsyncEx.Context": {
         "type": "Transitive",
         "resolved": "5.1.2",
@@ -698,6 +742,12 @@
           "runtime.linux-x64.Microsoft.DotNet.ILCompiler": "8.0.7"
         }
       },
+      "Microsoft.Web.WebView2": {
+        "type": "Direct",
+        "requested": "[1.0.2592.51, )",
+        "resolved": "1.0.2592.51",
+        "contentHash": "AC9aWCthS2JvddYA1jl4dFpLBW3GsLRInhp5dkcBzaFXsRehfoUN9olIUsrH41eNaNYd7z9NRvmy81aUA5aD1g=="
+      },
       "Avalonia.Angle.Windows.Natives": {
         "type": "Transitive",
         "resolved": "2.1.22045.20230930",
@@ -763,6 +813,12 @@
           "runtime.osx-x64.Microsoft.DotNet.ILCompiler": "8.0.7"
         }
       },
+      "Microsoft.Web.WebView2": {
+        "type": "Direct",
+        "requested": "[1.0.2592.51, )",
+        "resolved": "1.0.2592.51",
+        "contentHash": "AC9aWCthS2JvddYA1jl4dFpLBW3GsLRInhp5dkcBzaFXsRehfoUN9olIUsrH41eNaNYd7z9NRvmy81aUA5aD1g=="
+      },
       "Avalonia.Angle.Windows.Natives": {
         "type": "Transitive",
         "resolved": "2.1.22045.20230930",
@@ -827,6 +883,12 @@
         "dependencies": {
           "runtime.win-x64.Microsoft.DotNet.ILCompiler": "8.0.7"
         }
+      },
+      "Microsoft.Web.WebView2": {
+        "type": "Direct",
+        "requested": "[1.0.2592.51, )",
+        "resolved": "1.0.2592.51",
+        "contentHash": "AC9aWCthS2JvddYA1jl4dFpLBW3GsLRInhp5dkcBzaFXsRehfoUN9olIUsrH41eNaNYd7z9NRvmy81aUA5aD1g=="
       },
       "Avalonia.Angle.Windows.Natives": {
         "type": "Transitive",

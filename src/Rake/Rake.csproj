@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <RuntimeIdentifiers>osx-x64;win-x64;linux-x64</RuntimeIdentifiers>
@@ -14,30 +15,37 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
+        <AvaloniaResource Include="NativeMethods.txt" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AnimatedImage.Avalonia" />
+        <PackageReference Include="AnimatedImage.Avalonia"/>
         <PackageReference Include="AsyncImageLoader.Avalonia"/>
         <PackageReference Include="Avalonia.Desktop"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics"/>
         <PackageReference Include="Avalonia.Xaml.Behaviors"/>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
-        <PackageReference Include="Material.Icons.Avalonia" />
-        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" />
-        <PackageReference Include="Velopack" />
+        <PackageReference Include="Material.Icons.Avalonia"/>
+        <PackageReference Include="Microsoft.Web.WebView2" Condition="$([MSBuild]::IsOSPlatform('Windows'))"/>
+        <PackageReference Include="Microsoft.Windows.CsWin32" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator"/>
+        <PackageReference Include="Tabalonia"/>
+        <PackageReference Include="Velopack"/>
         <PackageReference Include="ZiggyCreatures.FusionCache"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\external\SukiUI\SukiUI\SukiUI.csproj" />
+        <ProjectReference Include="..\..\external\SukiUI\SukiUI\SukiUI.csproj"/>
         <ProjectReference Include="..\Rake.Core\Rake.Core.csproj"/>
         <ProjectReference Include="..\Rake.Generators\Rake.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Styles\" />
+        <Folder Include="Styles\"/>
     </ItemGroup>
 
 </Project>
