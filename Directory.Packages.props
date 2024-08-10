@@ -45,6 +45,7 @@
     <PackageVersion Include="System.Reactive" Version="6.0.1" />
     <PackageVersion Include="Tabalonia" Version="0.10.4" />
     <PackageVersion Include="Velopack" Version="0.0.583" />
+    <PackageVersion Include="WebkitGtkSharp" Version="3.24.24.95" />
     <PackageVersion Include="WPF-UI" Version="3.0.5" />
     <PackageVersion Include="WPF-UI.Tray" Version="3.0.5" />
     <PackageVersion Include="WPFLocalizeExtension" Version="3.10.0" />

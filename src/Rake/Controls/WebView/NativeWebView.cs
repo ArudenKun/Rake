@@ -44,7 +44,7 @@ public class NativeWebView : NativeControlHost, IWebView, IDisposable
         _webViewAdapter = new WebView2Adapter();
 #pragma warning restore CA1416
 #else
-
+        throw new PlatformNotSupportedException("Linux is not yet supported");
 #endif
 
         _webViewAdapter.NavigationStarted += WebViewAdapterOnNavigationStarted;

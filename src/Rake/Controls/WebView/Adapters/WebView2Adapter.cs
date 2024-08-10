@@ -1,6 +1,5 @@
 #if __WINDOWS__
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -9,6 +8,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using Microsoft.Web.WebView2.Core;
+using Rake.Core.Helpers;
 using Size = Avalonia.Size;
 
 namespace Rake.Controls.WebView.Adapters;
@@ -29,11 +29,10 @@ public sealed class WebView2Adapter : IWebViewAdapter
 
     public Uri? Source
     {
-        [return: MaybeNull]
         get =>
             Uri.TryCreate(_controller?.CoreWebView2?.Source, UriKind.Absolute, out var url)
                 ? url
-                : null!;
+                : null;
         set => _controller?.CoreWebView2?.Navigate(value?.AbsoluteUri);
     }
 
@@ -105,7 +104,9 @@ public sealed class WebView2Adapter : IWebViewAdapter
 
         if (_controller == null)
         {
-            var env = await CoreWebView2Environment.CreateAsync();
+            var env = await CoreWebView2Environment.CreateAsync(
+                userDataFolder: EnvironmentHelper.AppDataDirectory.JoinPath("cache")
+            );
             _controller = await env.CreateCoreWebView2ControllerAsync(Handle);
             _controller.DefaultBackgroundColor = Color.Transparent;
             _controller.IsVisible = true;
