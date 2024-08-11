@@ -1,38 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>12</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Configurations>Debug;Release</Configurations>
-        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
-
+    
     <ItemGroup>
-        <PackageReference Include="AutoInterface">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PackageReference Include="AutoInterface" Version="2.3.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="CliWrap" />
-        <PackageReference Include="Cogwheel" />
-        <PackageReference Include="Credfeto.Enumeration.Source.Generation">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PackageReference Include="CliWrap" Version="3.6.6"/>
+        <PackageReference Include="Cogwheel" Version="2.1.0"/>
+        <PackageReference Include="Credfeto.Enumeration.Source.Generation" Version="1.1.7.384">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" ExcludeAssets="runtime" />
-        <PackageReference Include="Flurl.Http" />
-        <PackageReference Include="Gress" />
-        <PackageReference Include="Nito.AsyncEx" />
-        <PackageReference Include="Serilog.Enrichers.ClassName" />
-        <PackageReference Include="Serilog.Extensions.Logging" />
-        <PackageReference Include="Serilog.Sinks.Async" />
-        <PackageReference Include="Serilog.Sinks.Console" />
-        <PackageReference Include="Serilog.Sinks.FileEx" />
-        <PackageReference Include="System.Reactive" />
+        <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" ExcludeAssets="runtime" Version="1.1.7.384"/>
+        <PackageReference Include="Flurl.Http" Version="4.0.2"/>
+        <PackageReference Include="Gress" Version="2.1.1"/>
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
+        <PackageReference Include="Serilog.Enrichers.ClassName" Version="0.2.0"/>
+        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Async" Version="2.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
+        <PackageReference Include="Serilog.Sinks.FileEx" Version="5.1.8"/>
+        <PackageReference Include="System.Reactive" Version="6.0.1"/>
     </ItemGroup>
-
+    
     <ItemGroup>
-      <Folder Include="YtDlp\Options\" />
+        <Folder Include="YtDlp\Options\"/>
     </ItemGroup>
-
 </Project>

@@ -1,61 +1,54 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <UseWPF>true</UseWPF>
-        <Platforms>x64</Platforms>
-        <PlatformTarget>x64</PlatformTarget>
-        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-        <StartupObject>Rake.Program</StartupObject>
-    </PropertyGroup>
-
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <StartupObject>Rake.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="CompiledBindings.WPF" Version="1.0.18" />
+    <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.AppServices" Version="1.0.14" />
+    <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.Plugins" Version="1.0.14" />
+    <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.Wpf" Version="1.0.14" />
+    <PackageReference Include="FFME.Windows" Version="4.4.350" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.122" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Velopack" Version="0.0.583" />
+    <PackageReference Include="WPF-UI" Version="3.0.5" />
+    <PackageReference Include="WPF-UI.Tray" Version="3.0.5" />
+    <PackageReference Include="WPFLocalizeExtension" Version="3.10.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controls\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Properties\Localization\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rake.Core\Rake.Core.csproj" />
+    <ProjectReference Include="..\Rake.Generators\Rake.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Target Name="Copy Libs Before Build" BeforeTargets="PreBuildEvent">
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Mvvm"/>
-        <PackageReference Include="CompiledBindings.WPF"/>
-        <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.AppServices" />
-        <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.Plugins"/>
-        <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.Wpf"/>
-        <PackageReference Include="FFME.Windows" />
-        <PackageReference Include="Microsoft.Extensions.Hosting"/>
-        <PackageReference Include="Microsoft.Web.WebView2"/>
-        <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf"/>
-        <PackageReference Include="Serilog.Extensions.Hosting"/>
-        <PackageReference Include="Velopack" />
-        <PackageReference Include="WPF-UI"/>
-        <PackageReference Include="WPF-UI.Tray"/>
-        <PackageReference Include="WPFLocalizeExtension" />
+      <FFmpegFiles Include="$(RootDir)libs\ffmpeg\**\*.*" />
+      <YtDlpFiles Include="$(RootDir)libs\yt-dlp\**\*.*" />
     </ItemGroup>
-
+    <Copy SkipUnchangedFiles="true" SourceFiles="@(FFmpegFiles)" DestinationFolder="$(OutDir)\ffmpeg\%(RecursiveDir)" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="@(YtDlpFiles)" DestinationFolder="$(OutDir)\yt-dlp\%(RecursiveDir)" />
+  </Target>
+  <Target Name="Copy Libs Before Publish" BeforeTargets="PrepareForPublish">
     <ItemGroup>
-        <Folder Include="Controls\" />
-        <Folder Include="Extensions\"/>
-        <Folder Include="Properties\Localization\" />
+      <FFmpegFiles Include="$(RootDir)libs\ffmpeg\**\*.*" />
+      <YtDlpFiles Include="$(RootDir)libs\yt-dlp\**\*.*" />
     </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Rake.Core\Rake.Core.csproj"/>
-        <ProjectReference Include="..\Rake.Generators\Rake.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
-    </ItemGroup>
-    
-    <Target Name="Copy Libs Before Build" BeforeTargets="PreBuildEvent">
-        <ItemGroup>
-            <FFmpegFiles Include="$(RootDir)libs\ffmpeg\**\*.*" />
-            <YtDlpFiles Include="$(RootDir)libs\yt-dlp\**\*.*" />
-        </ItemGroup>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(FFmpegFiles)" DestinationFolder="$(OutDir)\ffmpeg\%(RecursiveDir)"/>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(YtDlpFiles)" DestinationFolder="$(OutDir)\yt-dlp\%(RecursiveDir)"/>
-    </Target>
-
-    <Target Name="Copy Libs Before Publish" BeforeTargets="PrepareForPublish">
-        <ItemGroup>
-            <FFmpegFiles Include="$(RootDir)libs\ffmpeg\**\*.*" />
-            <YtDlpFiles Include="$(RootDir)libs\yt-dlp\**\*.*" />
-        </ItemGroup>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(FFmpegFiles)" DestinationFolder="$(PublishDir)\ffmpeg\%(RecursiveDir)"/>
-        <Copy SkipUnchangedFiles="true" SourceFiles="@(YtDlpFiles)" DestinationFolder="$(PublishDir)\yt-dlp\%(RecursiveDir)"/>
-    </Target>
-
+    <Copy SkipUnchangedFiles="true" SourceFiles="@(FFmpegFiles)" DestinationFolder="$(PublishDir)\ffmpeg\%(RecursiveDir)" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="@(YtDlpFiles)" DestinationFolder="$(PublishDir)\yt-dlp\%(RecursiveDir)" />
+  </Target>
 </Project>
