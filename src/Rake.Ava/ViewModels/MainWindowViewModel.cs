@@ -18,4 +18,14 @@ public partial class MainWindowViewModel : BaseViewModel
     {
         Pages = pageViewModels.OrderBy(x => x.PageIndex);
     }
+
+    partial void OnActivePageChanged(IPageViewModel? oldValue, IPageViewModel newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.IsPageActive = false;
+        }
+
+        newValue.IsPageActive = true;
+    }
 }

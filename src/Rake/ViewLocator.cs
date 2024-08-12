@@ -1,68 +1,30 @@
 using System;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Rake.Generators.Attributes;
-using Rake.ViewModels.Abstractions;
+using Avalonia.Controls.Templates;
+using Rake.ViewModels;
 
 namespace Rake;
 
-[StaticViewLocator]
-public sealed partial class ViewLocator
+public class ViewLocator : IDataTemplate
 {
-    public Control? Build(object? viewModel)
+    public Control? Build(object? data)
     {
-        if (viewModel is null)
+        if (data is null)
             return null;
 
-        var viewModelType = viewModel.GetType();
+        var name = data.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
+        var type = Type.GetType(name);
 
-        if (!ViewMap.TryGetValue(viewModelType, out var factory))
-            return new TextBlock { Text = $"No view registered for {viewModelType.FullName}" };
+        if (type != null)
+        {
+            return (Control)Activator.CreateInstance(type)!;
+        }
 
-        var control = factory(viewModel);
-        control.DataContext = viewModel;
-        RegisterEvents((IViewModel)viewModel, control);
-        return control;
+        return new TextBlock { Text = "Not Found: " + name };
     }
 
-    public bool Match(object? data) => data is IViewModel;
-
-    private static void RegisterEvents(IViewModel viewModel, Control control)
+    public bool Match(object? data)
     {
-        control = control ?? throw new ArgumentNullException(nameof(control));
-
-        control.Loaded += Loaded;
-        control.Unloaded += Unloaded;
-        control.AttachedToVisualTree += AttachedToVisualTree;
-        control.DetachedFromVisualTree += DetachedFromVisualTree;
-
-        return;
-
-        void Loaded(object? sender, RoutedEventArgs e)
-        {
-            viewModel?.Loaded();
-        }
-
-        void Unloaded(object? sender, RoutedEventArgs e)
-        {
-            viewModel?.Unloaded();
-
-            control.Loaded -= Loaded;
-            control.Unloaded -= Unloaded;
-        }
-
-        void AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
-        {
-            viewModel.AttachedToVisualTree();
-        }
-
-        void DetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
-        {
-            viewModel.DetachedFromVisualTree();
-
-            control.AttachedToVisualTree -= AttachedToVisualTree;
-            control.DetachedFromVisualTree -= DetachedFromVisualTree;
-        }
+        return data is ViewModelBase;
     }
 }
