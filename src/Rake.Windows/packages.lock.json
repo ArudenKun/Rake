@@ -15,6 +15,33 @@
           "Avalonia.X11": "11.1.1"
         }
       },
+      "Microsoft.Web.WebView2": {
+        "type": "Direct",
+        "requested": "[1.0.2592.51, )",
+        "resolved": "1.0.2592.51",
+        "contentHash": "AC9aWCthS2JvddYA1jl4dFpLBW3GsLRInhp5dkcBzaFXsRehfoUN9olIUsrH41eNaNYd7z9NRvmy81aUA5aD1g=="
+      },
+      "Microsoft.Windows.CsWin32": {
+        "type": "Direct",
+        "requested": "[0.3.106, )",
+        "resolved": "0.3.106",
+        "contentHash": "Mx5fK7uN6fwLR4wUghs6//HonAnwPBNmC2oonyJVhCUlHS/r6SUS3NkBc3+gaQiv+0/9bqdj1oSCKQFkNI+21Q==",
+        "dependencies": {
+          "Microsoft.Windows.SDK.Win32Docs": "0.1.42-alpha",
+          "Microsoft.Windows.SDK.Win32Metadata": "60.0.34-preview",
+          "Microsoft.Windows.WDK.Win32Metadata": "0.11.4-experimental"
+        }
+      },
+      "Velopack": {
+        "type": "Direct",
+        "requested": "[0.0.583, )",
+        "resolved": "0.0.583",
+        "contentHash": "2sUkrjctVnGJbanV4lqAx52uTaKwzAWG6ySd5b5ce8oYtpHFUpqgFHWlm8Ibp+E5hoWCJbOq+zl6MrRkbyNK5Q==",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "NuGet.Versioning": "6.10.1"
+        }
+      },
       "Avalonia": {
         "type": "Transitive",
         "resolved": "11.1.2",
@@ -645,6 +672,20 @@
           "Humanizer.Core": "[2.14.1]"
         }
       },
+      "Material.Icons": {
+        "type": "Transitive",
+        "resolved": "2.1.10",
+        "contentHash": "nQnLAoVb9lgxWd4OtDADPVzBxERB9UYQd0UWcrqjg0NKFf8oPMuDM2kkxpBKe/Wm6Ayx3C/t3j2+8R1Nscg0Kw=="
+      },
+      "Material.Icons.Avalonia": {
+        "type": "Transitive",
+        "resolved": "2.1.10",
+        "contentHash": "dclTtNbnoLonYK/YI2vgYvOmLeqw08xHxL+ExOSGZEMJKt6k3F6SDmJ41tByOxgXAd+nIDh8V9FqC0FQSEp/CQ==",
+        "dependencies": {
+          "Avalonia": "11.0.0-rc1.1",
+          "Material.Icons": "2.1.10"
+        }
+      },
       "MicroCom.Runtime": {
         "type": "Transitive",
         "resolved": "0.11.0",
@@ -694,6 +735,24 @@
         "type": "Transitive",
         "resolved": "8.0.0",
         "contentHash": "bXJEZrW9ny8vjMF1JV253WeLhpEVzFo1lyaZu1vQ4ZxWUlVvknZ/+ftFgVheLubb4eZPSwwxBeqS1JkCOjxd8g=="
+      },
+      "Microsoft.Windows.SDK.Win32Docs": {
+        "type": "Transitive",
+        "resolved": "0.1.42-alpha",
+        "contentHash": "Z/9po23gUA9aoukirh2ItMU2ZS9++Js9Gdds9fu5yuMojDrmArvY2y+tq9985tR3cxFxpZO1O35Wjfo0khj5HA=="
+      },
+      "Microsoft.Windows.SDK.Win32Metadata": {
+        "type": "Transitive",
+        "resolved": "60.0.34-preview",
+        "contentHash": "TA3DUNi4CTeo+ItTXBnGZFt2159XOGSl0UOlG5vjDj4WHqZjhwYyyUnzOtrbCERiSaP2Hzg7otJNWwOSZgutyA=="
+      },
+      "Microsoft.Windows.WDK.Win32Metadata": {
+        "type": "Transitive",
+        "resolved": "0.11.4-experimental",
+        "contentHash": "bf5MCmUyZf0gBlYQjx9UpRAZWBkRndyt9XicR+UNLvAUAFTZQbu6YaX/sNKZlR98Grn0gydfh/yT4I3vc0AIQA==",
+        "dependencies": {
+          "Microsoft.Windows.SDK.Win32Metadata": "60.0.34-preview"
+        }
       },
       "Nito.AsyncEx": {
         "type": "Transitive",
@@ -769,6 +828,11 @@
         "dependencies": {
           "System.Collections.Immutable": "1.7.1"
         }
+      },
+      "NuGet.Versioning": {
+        "type": "Transitive",
+        "resolved": "6.10.1",
+        "contentHash": "tovHZ3OlMVmsTdhv2z5nwnnhoA1ryhfJMyVQ9/+iv6d3h78fp230XaGy3K/iVcLwB50DdfNfIsitW97KSOWDFg=="
       },
       "ReactiveUI": {
         "type": "Transitive",
@@ -907,6 +971,7 @@
           "Flurl.Http": "[4.0.2, )",
           "Gress": "[2.1.1, )",
           "Humanizer": "[2.14.1, )",
+          "Material.Icons.Avalonia": "[2.1.10, )",
           "Nito.AsyncEx": "[5.1.2, )",
           "Serilog.Enrichers.ClassName": "[0.2.0, )",
           "Serilog.Extensions.Logging": "[8.0.0, )",

@@ -120,6 +120,16 @@
           "Humanizer.Core.zh-Hant": "2.14.1"
         }
       },
+      "Material.Icons.Avalonia": {
+        "type": "Direct",
+        "requested": "[2.1.10, )",
+        "resolved": "2.1.10",
+        "contentHash": "dclTtNbnoLonYK/YI2vgYvOmLeqw08xHxL+ExOSGZEMJKt6k3F6SDmJ41tByOxgXAd+nIDh8V9FqC0FQSEp/CQ==",
+        "dependencies": {
+          "Avalonia": "11.0.0-rc1.1",
+          "Material.Icons": "2.1.10"
+        }
+      },
       "Nito.AsyncEx": {
         "type": "Direct",
         "requested": "[5.1.2, )",
@@ -669,6 +679,11 @@
         "dependencies": {
           "Humanizer.Core": "[2.14.1]"
         }
+      },
+      "Material.Icons": {
+        "type": "Transitive",
+        "resolved": "2.1.10",
+        "contentHash": "nQnLAoVb9lgxWd4OtDADPVzBxERB9UYQd0UWcrqjg0NKFf8oPMuDM2kkxpBKe/Wm6Ayx3C/t3j2+8R1Nscg0Kw=="
       },
       "MicroCom.Runtime": {
         "type": "Transitive",

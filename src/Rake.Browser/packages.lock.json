@@ -614,6 +614,20 @@
           "Humanizer.Core": "[2.14.1]"
         }
       },
+      "Material.Icons": {
+        "type": "Transitive",
+        "resolved": "2.1.10",
+        "contentHash": "nQnLAoVb9lgxWd4OtDADPVzBxERB9UYQd0UWcrqjg0NKFf8oPMuDM2kkxpBKe/Wm6Ayx3C/t3j2+8R1Nscg0Kw=="
+      },
+      "Material.Icons.Avalonia": {
+        "type": "Transitive",
+        "resolved": "2.1.10",
+        "contentHash": "dclTtNbnoLonYK/YI2vgYvOmLeqw08xHxL+ExOSGZEMJKt6k3F6SDmJ41tByOxgXAd+nIDh8V9FqC0FQSEp/CQ==",
+        "dependencies": {
+          "Avalonia": "11.0.0-rc1.1",
+          "Material.Icons": "2.1.10"
+        }
+      },
       "MicroCom.Runtime": {
         "type": "Transitive",
         "resolved": "0.11.0",
@@ -858,6 +872,7 @@
           "Flurl.Http": "[4.0.2, )",
           "Gress": "[2.1.1, )",
           "Humanizer": "[2.14.1, )",
+          "Material.Icons.Avalonia": "[2.1.10, )",
           "Nito.AsyncEx": "[5.1.2, )",
           "Serilog.Enrichers.ClassName": "[0.2.0, )",
           "Serilog.Extensions.Logging": "[8.0.0, )",

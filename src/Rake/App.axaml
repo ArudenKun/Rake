@@ -1,8 +1,10 @@
+<!--  ReSharper disable once InconsistentNaming  -->
 <Application
     x:Class="Rake.App"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Rake"
+    xmlns:material-icons="using:Material.Icons.Avalonia"
     xmlns:suki="https://github.com/kikipoulet/SukiUI"
     RequestedThemeVariant="Default">
     <!--  "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options.  -->
@@ -13,5 +15,7 @@
 
     <Application.Styles>
         <suki:SukiTheme />
+        <material-icons:MaterialIconStyles />
+        <StyleInclude Source="Controls/Index.axaml" />
     </Application.Styles>
 </Application>
