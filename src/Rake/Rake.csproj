@@ -1,46 +1,59 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <LangVersion>latest</LangVersion>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Assets\rake.ico</ApplicationIcon>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+        <Platform>x64</Platform>
+        <PlatformTarget>x64</PlatformTarget>
+        <PublishReadyToRun>false</PublishReadyToRun>
+        <PublishTrimmed>true</PublishTrimmed>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+        <NoWarn>$(NoWarn);SYSLIB0020;AVLN3001</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
+        <AvaloniaResource Include="NativeMethods.txt"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoInterface" Version="2.3.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Avalonia" Version="11.1.2"/>
+        <PackageReference Include="AnimatedImage.Avalonia" Version="1.0.7"/>
+        <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.1.3" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.2"/>
-        <PackageReference Include="CliWrap" Version="3.6.6" />
-        <PackageReference Include="Cogwheel" Version="2.1.0" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-        <PackageReference Include="Flurl.Http" Version="4.0.2" />
-        <PackageReference Include="Gress" Version="2.1.1" />
-        <PackageReference Include="Humanizer" Version="2.14.1" />
-        <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10" />
-        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
-        <PackageReference Include="Serilog.Enrichers.ClassName" Version="0.2.0" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-        <PackageReference Include="Serilog.Sinks.Async" Version="2.0.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-        <PackageReference Include="Serilog.Sinks.FileEx" Version="5.1.8" />
-        <PackageReference Include="System.Reactive" Version="6.0.1" />
+        <PackageReference Include="Avalonia.Diagnostics" Condition="'$(Configuration)' == 'Debug'" Version="11.1.3" />
+        <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.1.0"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2"/>
+        <PackageReference Include="Jot" Version="2.1.17" />
+        <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10"/>
+        <PackageReference Include="Microsoft.Web.WebView2" Condition="$([MSBuild]::IsOSPlatform('Windows')) OR '$(RuntimeIdentifier)'=='win-x64' OR '$(Configuration)' == 'Debug'" Version="1.0.2651.64" />
+        <PackageReference Include="Microsoft.Windows.CsWin32" Condition="$([MSBuild]::IsOSPlatform('Windows')) OR '$(RuntimeIdentifier)'=='win-x64' OR '$(Configuration)' == 'Debug'" Version="0.3.106">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.3.1"/>
+        <PackageReference Include="Tabalonia" Version="0.10.4"/>
+        <PackageReference Include="Velopack" Version="0.0.583"/>
+        <PackageReference Include="WebkitGtkSharp" Condition="$([MSBuild]::IsOSPlatform('Linux')) OR '$(RuntimeIdentifier)'=='linux-x64' OR '$(Configuration)' == 'Debug'" Version="3.24.24.95"/>
+        <PackageReference Include="ZiggyCreatures.FusionCache" Version="1.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\external\SukiUI\SukiUI\SukiUI.csproj" />
-      <ProjectReference Include="..\Rake.Generators\Rake.Generators.csproj" OutputItemType="analyzer" ReferenceOutputAssembly="false"/>
+        <TrimmerRootAssembly Include="Microsoft.Web.WebView2.Core" Condition="$([MSBuild]::IsOSPlatform('Windows')) OR '$(RuntimeIdentifier)'=='win-x64'"/>
+        <TrimmerRootAssembly Include="WebkitGtkSharp" Condition="$([MSBuild]::IsOSPlatform('Linux')) OR '$(RuntimeIdentifier)'=='linux-x64'"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Properties\" />
+        <ProjectReference Include="..\..\external\SukiUI\SukiUI\SukiUI.csproj"/>
+        <ProjectReference Include="..\Rake.Core\Rake.Core.csproj"/>
+        <ProjectReference Include="..\Rake.Generators\Rake.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
+
 </Project>

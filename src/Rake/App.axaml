@@ -14,7 +14,7 @@
     </Application.DataTemplates>
 
     <Application.Styles>
-        <suki:SukiTheme />
+        <suki:SukiTheme ThemeColor="Blue" />
         <material-icons:MaterialIconStyles />
         <StyleInclude Source="Controls/Index.axaml" />
     </Application.Styles>

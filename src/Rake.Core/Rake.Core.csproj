@@ -8,7 +8,8 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="AutoInterface" Version="2.3.0">
+        <PackageReference Include="AsyncAwaitBestPractices" Version="8.0.0" />
+        <PackageReference Include="AutoInterface" Version="2.4.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="CliWrap" Version="3.6.6"/>
@@ -26,9 +27,5 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
         <PackageReference Include="Serilog.Sinks.FileEx" Version="5.1.8"/>
         <PackageReference Include="System.Reactive" Version="6.0.1"/>
-    </ItemGroup>
-    
-    <ItemGroup>
-        <Folder Include="YtDlp\Options\"/>
     </ItemGroup>
 </Project>

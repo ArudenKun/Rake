@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
-using CommunityToolkit.Mvvm.DependencyInjection;
+using Rake.Controls.WebView.Adapters;
 using Rake.Extensions;
 
 namespace Rake.Controls.WebView;
@@ -12,8 +12,7 @@ public class NativeWebView : NativeControlHost, IWebView, IDisposable
 {
     private static readonly Uri EmptyPageLink = new("about:blank");
 
-    private readonly IWebViewAdapter _webViewAdapter =
-        Ioc.Default.GetRequiredService<IWebViewAdapter>();
+    private readonly IWebViewAdapter _webViewAdapter;
 
     public event EventHandler<WebViewNavigationCompletedEventArgs>? NavigationCompleted;
     public event EventHandler<WebViewNavigationStartingEventArgs>? NavigationStarted;
@@ -40,6 +39,14 @@ public class NativeWebView : NativeControlHost, IWebView, IDisposable
 
     public NativeWebView()
     {
+#if __WINDOWS__
+#pragma warning disable CA1416
+        _webViewAdapter = new WebView2Adapter();
+#pragma warning restore CA1416
+#else
+        throw new PlatformNotSupportedException("Linux is not yet supported");
+#endif
+
         _webViewAdapter.NavigationStarted += WebViewAdapterOnNavigationStarted;
         _webViewAdapter.NavigationCompleted += WebViewAdapterOnNavigationCompleted;
         _webViewAdapter.DomContentLoaded += WebViewAdapterOnDomContentLoaded;

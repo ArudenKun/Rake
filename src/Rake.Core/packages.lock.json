@@ -2,11 +2,17 @@
   "version": 1,
   "dependencies": {
     "net8.0": {
+      "AsyncAwaitBestPractices": {
+        "type": "Direct",
+        "requested": "[8.0.0, )",
+        "resolved": "8.0.0",
+        "contentHash": "oL+t1uj/i/RWp20w46/j4YKO+1F4cluAIMl6z/wB8GmycWhBzh6cEXLR7Ova/QH5JgismOQlJoOSvid3KSLQ2Q=="
+      },
       "AutoInterface": {
         "type": "Direct",
-        "requested": "[2.3.0, )",
-        "resolved": "2.3.0",
-        "contentHash": "AF5a9oZPj6BKVaoXXBGkA5/H7ZBawO9IRlBpYwVgw0b4vFxk4ddPcNThQP+rRtSH0arilVdZ2PaBHD7N+bMjMQ=="
+        "requested": "[2.4.0, )",
+        "resolved": "2.4.0",
+        "contentHash": "UZkZSQO3NDdgHgBUPU0gHDSb1QI8WWpWPvELZE9Rtq+WBgX0853XzXkURsewuTbdMzqPzoj8uCxex5xkuy3tLA=="
       },
       "CliWrap": {
         "type": "Direct",

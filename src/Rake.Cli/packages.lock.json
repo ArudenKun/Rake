@@ -10,20 +10,25 @@
       },
       "Microsoft.DotNet.ILCompiler": {
         "type": "Direct",
-        "requested": "[8.0.7, )",
-        "resolved": "8.0.7",
-        "contentHash": "5Vkl5384rfKZmK7rVm8pjuMk2Cweaqd+rPwL86bddhInHdBg3ClO9H0cqwd7kXf+F8/aXuZxKAnl6izzaWkfUw=="
+        "requested": "[8.0.8, )",
+        "resolved": "8.0.8",
+        "contentHash": "OWFDT/S4Zl5QVakCjVfRaZTLrmWDhA20ud/BKkru7vWnIrejMcUk4Xz2MwavgyzBypryoHYta787k4avhxsU9A=="
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[8.0.7, )",
-        "resolved": "8.0.7",
-        "contentHash": "iI52ptEKby2ymQ6B7h4TWbFmm85T4VvLgc/HvS45Yr3lgi4IIFbQtjON3bQbX/Vc94jXNSLvrDOp5Kh7SJyFYQ=="
+        "requested": "[8.0.8, )",
+        "resolved": "8.0.8",
+        "contentHash": "P8wR6MUWwYXIjPJuBaZgo5zlI/GWI6QEAo6NyVIbPefa9CCkohYu7dP2rD/mrqnjEqfRHyl+h9VZrDoGpELqYg=="
+      },
+      "AsyncAwaitBestPractices": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "oL+t1uj/i/RWp20w46/j4YKO+1F4cluAIMl6z/wB8GmycWhBzh6cEXLR7Ova/QH5JgismOQlJoOSvid3KSLQ2Q=="
       },
       "AutoInterface": {
         "type": "Transitive",
-        "resolved": "2.3.0",
-        "contentHash": "AF5a9oZPj6BKVaoXXBGkA5/H7ZBawO9IRlBpYwVgw0b4vFxk4ddPcNThQP+rRtSH0arilVdZ2PaBHD7N+bMjMQ=="
+        "resolved": "2.4.0",
+        "contentHash": "UZkZSQO3NDdgHgBUPU0gHDSb1QI8WWpWPvELZE9Rtq+WBgX0853XzXkURsewuTbdMzqPzoj8uCxex5xkuy3tLA=="
       },
       "CliWrap": {
         "type": "Transitive",
@@ -242,7 +247,8 @@
       "rake.core": {
         "type": "Project",
         "dependencies": {
-          "AutoInterface": "[2.3.0, )",
+          "AsyncAwaitBestPractices": "[8.0.0, )",
+          "AutoInterface": "[2.4.0, )",
           "CliWrap": "[3.6.6, )",
           "Cogwheel": "[2.1.0, )",
           "Credfeto.Enumeration.Source.Generation": "[1.1.7.384, )",

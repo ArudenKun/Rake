@@ -12,11 +12,9 @@ public static class BinariesHelper
     public static string FFmpegFileName => GetFFmpegFileName();
     public static string YtDlpFileName => GetYtDlpFileName();
     public static string FFmpegPath { get; } =
-        // PathHelper.GetFromEnvironment(FFmpegFileName) ??
-        BinDir.JoinPath(FFmpegFileName);
+        PathHelper.GetFromEnvironment(FFmpegFileName) ?? BinDir.JoinPath(FFmpegFileName);
     public static string YtDlpPath { get; } =
-        // PathHelper.GetFromEnvironment(YtDlpFileName) ??
-        BinDir.JoinPath(YtDlpFileName);
+        PathHelper.GetFromEnvironment(YtDlpFileName) ?? BinDir.JoinPath(YtDlpFileName);
     public static bool FFmpegExist => File.Exists(FFmpegPath);
     public static bool YtDlpExist => File.Exists(YtDlpPath);
     public static bool BinariesExist => FFmpegExist && YtDlpExist;

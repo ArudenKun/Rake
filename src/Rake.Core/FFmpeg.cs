@@ -2,23 +2,31 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using CliWrap;
+using CliWrap.Builders;
 using CliWrap.Exceptions;
 using Rake.Core.Extensions;
 using Rake.Core.Helpers;
 
 namespace Rake.Core;
 
-public static partial class FFmpeg
+public sealed partial class FFmpeg : BaseCliWrapper
 {
-    [GeneratedRegex(@"Duration:\s(\d+):(\d+):(\d+\.\d+)")]
-    private static partial Regex DurationRegex();
+    public override string CliName => nameof(FFmpeg);
 
-    [GeneratedRegex(@"time=(\d+):(\d+):(\d+\.\d+)")]
-    private static partial Regex TimeRegex();
+    public ValueTask ExecuteAsync(
+        Action<ArgumentsBuilder> argumentsBuilder,
+        IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var argumentsBuilderInstance = new ArgumentsBuilder();
+        argumentsBuilder(argumentsBuilderInstance);
+        return ExecuteAsync(argumentsBuilderInstance.Build(), progress, cancellationToken);
+    }
 
-    public static async ValueTask ExecuteAsync(
+    public override async ValueTask ExecuteAsync(
         string arguments,
-        IProgress<double>? progress,
+        IProgress<double>? progress = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -52,7 +60,7 @@ public static partial class FFmpeg
         }
     }
 
-    private static PipeTarget CreateProgressRouter(IProgress<double> progress)
+    protected override PipeTarget CreateProgressRouter(IProgress<double> progress)
     {
         var totalDuration = default(TimeSpan?);
 
@@ -120,4 +128,10 @@ public static partial class FFmpeg
             }
         });
     }
+
+    [GeneratedRegex(@"Duration:\s(\d+):(\d+):(\d+\.\d+)")]
+    private static partial Regex DurationRegex();
+
+    [GeneratedRegex(@"time=(\d+):(\d+):(\d+\.\d+)")]
+    private static partial Regex TimeRegex();
 }
