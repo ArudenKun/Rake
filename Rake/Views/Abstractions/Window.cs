@@ -1,13 +1,10 @@
 ﻿using System;
-using Avalonia.Interactivity;
-using JetBrains.Annotations;
+using Avalonia.Controls;
 using Rake.ViewModels.Abstractions;
-using SukiUI.Controls;
 
 namespace Rake.Views.Abstractions;
 
-[PublicAPI]
-public abstract class SukiWindow<TViewModel> : SukiWindow
+public class Window<TViewModel> : Window
     where TViewModel : ViewModelBase
 {
     public new TViewModel DataContext

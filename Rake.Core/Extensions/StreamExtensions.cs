@@ -1,41 +1,41 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
+using Gress;
 using Humanizer;
 using Rake.Core.Downloading;
+using Rake.Core.Downloading.Internals;
 
 namespace Rake.Core.Extensions;
 
 public static class StreamExtensions
 {
+    private const int DefaultBufferSize = 4096;
+
     public static void CopyTo(
         this Stream source,
         Stream destination,
-        int bufferSize = 81920,
+        int bufferSize = DefaultBufferSize,
         long totalBytes = 0L,
-        IProgress<double>? progress = null
+        IProgress<Percentage>? progress = null
     ) => CopyTo(source, destination, bufferSize, totalBytes, progress.Wrap());
 
     public static void CopyTo(
         this Stream source,
         Stream destination,
-        int bufferSize = 81920,
+        int bufferSize = DefaultBufferSize,
         long totalBytes = 0L,
         IProgress<ICopyProgress>? progress = null
     )
     {
         ArgumentNullException.ThrowIfNull(source);
         if (!source.CanRead)
-        {
             throw new ArgumentException("Source stream must be readable.", nameof(source));
-        }
         ArgumentNullException.ThrowIfNull(destination);
         if (!destination.CanWrite)
-        {
             throw new ArgumentException(
                 "Destination stream must be writable.",
                 nameof(destination)
             );
-        }
 
         ArgumentOutOfRangeException.ThrowIfNegative(bufferSize);
         totalBytes =
@@ -46,7 +46,6 @@ public static class StreamExtensions
                 : totalBytes;
 
         ArgumentOutOfRangeException.ThrowIfNegative(bufferSize);
-
         using var buffer = MemoryPool<byte>.Shared.Rent(bufferSize);
         long totalBytesRead = 0;
         var bandwidth = new Bandwidth();
@@ -72,15 +71,15 @@ public static class StreamExtensions
         }
     }
 
-    public static async ValueTask CopyToAsync(
+    public static ValueTask CopyToAsync(
         this Stream source,
         Stream destination,
-        int bufferSize = 81920,
+        int bufferSize = DefaultBufferSize,
         long totalBytes = 0L,
-        IProgress<double>? progress = null,
+        IProgress<Percentage>? progress = null,
         CancellationToken cancellationToken = default
     ) =>
-        await CopyToAsync(
+        CopyToAsync(
             source,
             destination,
             bufferSize,
@@ -92,7 +91,7 @@ public static class StreamExtensions
     public static async ValueTask CopyToAsync(
         this Stream source,
         Stream destination,
-        int bufferSize = 81920,
+        int bufferSize = DefaultBufferSize,
         long totalBytes = 0L,
         IProgress<ICopyProgress>? progress = null,
         CancellationToken cancellationToken = default

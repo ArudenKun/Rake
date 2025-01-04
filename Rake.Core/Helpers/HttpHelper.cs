@@ -2,23 +2,18 @@
 
 public static class HttpHelper
 {
-    private static HttpClient? _httpClient;
+    private static readonly Lazy<HttpClient> LazyHttpClient = new(() =>
+    {
+        var handler = new HttpClientHandler { MaxConnectionsPerServer = int.MaxValue };
+        var httpClient = new HttpClient(handler, true);
+        httpClient.DefaultRequestHeaders.Add("User-Agent", ChromeUserAgent);
+        return httpClient;
+    });
 
     /// <summary>
-    /// Generates and caches <see cref="HttpClient"/>
+    /// Lazy loaded <see cref="HttpClient"/>
     /// </summary>
-    public static HttpClient HttpClient
-    {
-        get
-        {
-            if (_httpClient is not null)
-                return _httpClient;
-
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", ChromeUserAgent);
-            return _httpClient;
-        }
-    }
+    public static HttpClient HttpClient => LazyHttpClient.Value;
 
     /// <summary>
     /// Generates a random User-Agent from the Chrome browser.

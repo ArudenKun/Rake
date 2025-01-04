@@ -6,14 +6,20 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Rake.Core;
+using Rake.Core.Downloading;
+using Rake.Core.Helpers;
 using Rake.Extensions;
 using Rake.Services;
 using Rake.ViewModels;
 using Serilog;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
+using Velopack.Locators;
 
 namespace Rake;
 
@@ -24,16 +30,19 @@ public sealed class App : Application, IDisposable
     public App()
     {
         var services = new ServiceCollection();
-
         services.AddSingleton<SettingsService>();
         services.AddSingleton<UpdateService>();
-        services.AddSingleton<DialogService>();
-        services.AddSingleton<ToastService>();
         services.AddSingleton<ISukiDialogManager, SukiDialogManager>();
         services.AddSingleton<ISukiToastManager, SukiToastManager>();
+        services.AddSingleton<IVelopackLocator>(sp =>
+            VelopackLocator.GetDefault(sp.GetRequiredService<ILogger<IVelopackLocator>>())
+        );
+        services.AddSingleton(_ => Dispatcher.UIThread);
+        services.AddFactory(_ => Downloader.CreateInstance(HttpHelper.HttpClient));
         services.AddViewModels();
         services.AddLogging(builder => builder.ClearProviders().AddSerilog(dispose: true));
         _serviceProvider = services.BuildServiceProvider(true);
+        Ioc.Default.ConfigureServices(_serviceProvider);
     }
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
@@ -43,16 +52,16 @@ public sealed class App : Application, IDisposable
     public override void OnFrameworkInitializationCompleted()
 #pragma warning restore IL2046
     {
-        var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit.
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            logger.LogInformation("Application starting");
+            var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
+            logger.LogInformation("Application started");
             desktop.Exit += (_, _) =>
             {
-                logger.LogInformation("Application stopped");
+                logger.LogInformation("Application exited");
             };
             desktop.MainWindow = (Window?)
                 DataTemplates

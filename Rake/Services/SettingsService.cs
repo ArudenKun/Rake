@@ -2,7 +2,7 @@
 using Cogwheel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
-using Rake.Helpers;
+using Rake.Core.Helpers;
 using Rake.Models;
 
 namespace Rake.Services;

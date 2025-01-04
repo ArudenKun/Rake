@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Velopack.Locators;
+﻿using Velopack.Locators;
 
-namespace Rake.Helpers;
+namespace Rake.Core.Helpers;
 
 public static class PathHelper
 {
@@ -20,7 +16,7 @@ public static class PathHelper
     /// </summary>
     public static string AppRootDirectory => Locator.RootAppDir ?? AppContext.BaseDirectory;
 
-    public static string AppContextDirectory => Locator.AppContentDir ?? AppContext.BaseDirectory;
+    public static string AppContentDirectory => Locator.AppContentDir ?? AppContext.BaseDirectory;
 
     /// <summary>
     ///     Returns the path of the ApplicationData.

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Rake.Utilities;
+﻿namespace Rake.Core;
 
 public sealed class Disposable(Action dispose) : IDisposable
 {

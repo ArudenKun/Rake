@@ -1,10 +1,8 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
-using Rake.Utilities;
 
-namespace Rake.Extensions;
+namespace Rake.Core.Extensions;
 
 public static class NotifyPropertyChangedExtensions
 {

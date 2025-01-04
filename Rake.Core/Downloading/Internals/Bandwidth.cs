@@ -1,4 +1,4 @@
-﻿namespace Rake.Core.Downloading;
+﻿namespace Rake.Core.Downloading.Internals;
 
 /// <summary>
 /// Represents a class for calculating and managing bandwidth usage during a download operation.

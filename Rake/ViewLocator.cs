@@ -11,15 +11,15 @@ using Rake.Views;
 namespace Rake;
 
 [PublicAPI]
-public sealed class ViewManager : IDataTemplate
+public sealed class ViewLocator : IDataTemplate
 {
     private readonly Dictionary<Type, Func<Control>> _map = [];
 
-    public ViewManager() => Register<MainWindow, MainWindowViewModel>();
+    public ViewLocator() => Register<MainWindow, MainWindowViewModel>();
 
-    public void Register<TView, TViewModel>()
-        where TView : Control, new()
-        where TViewModel : ViewModelBase => _map[typeof(TViewModel)] = () => new TView();
+    public void Register<TControl, TViewModel>()
+        where TControl : Control, new()
+        where TViewModel : ViewModelBase => _map[typeof(TViewModel)] = () => new TControl();
 
     public Control TryBindView(ViewModelBase viewModel)
     {
@@ -30,14 +30,14 @@ public sealed class ViewManager : IDataTemplate
                 Text = $"Could not find view for {viewModel.GetType().FullName}",
             };
         view.DataContext ??= viewModel;
-        BindActivation(viewModel, view);
+        BindEvents(viewModel, view);
         return view;
     }
 
     private Control? TryCreateView(ViewModelBase viewModel) =>
         _map.TryGetValue(viewModel.GetType(), out var factory) ? factory() : null;
 
-    private static void BindActivation(ViewModelBase viewModel, Control control)
+    private static void BindEvents(ViewModelBase viewModel, Control control)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(control);
@@ -47,11 +47,12 @@ public sealed class ViewManager : IDataTemplate
 
         return;
 
-        void Loaded(object? sender, RoutedEventArgs e) => viewModel.Activate();
+        void Loaded(object? sender, RoutedEventArgs e) =>
+            viewModel.LoadedCommand.ExecuteAsync(null);
 
         void Unloaded(object? sender, RoutedEventArgs e)
         {
-            viewModel.Deactivate();
+            // viewModel.DeactivateCommand.ExecuteAsync(null);
             control.Loaded -= Loaded;
             control.Unloaded -= Unloaded;
         }

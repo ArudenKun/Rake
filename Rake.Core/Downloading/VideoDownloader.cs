@@ -4,8 +4,7 @@ using Gress;
 
 namespace Rake.Core.Downloading;
 
-[AutoInterface]
-public class VideoDownloader : IVideoDownloader
+public class VideoDownloader
 {
     public Task DownloadAsync(
         Url url,

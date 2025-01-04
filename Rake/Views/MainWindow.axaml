@@ -16,8 +16,8 @@
     mc:Ignorable="d">
 
     <suki:SukiWindow.Hosts>
-        <suki:SukiDialogHost Manager="{Binding DialogService.Manager}" />
-        <suki:SukiToastHost Manager="{Binding ToastService.Manager}" />
+        <suki:SukiDialogHost Manager="{Binding DialogManager}" />
+        <suki:SukiToastHost Manager="{Binding ToastManager}" />
     </suki:SukiWindow.Hosts>
 
     <Grid>

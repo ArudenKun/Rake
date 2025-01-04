@@ -3,9 +3,9 @@ using Gress;
 using Humanizer;
 using Humanizer.Bytes;
 
-namespace Rake.Core.Downloading;
+namespace Rake.Core.Downloading.Internals;
 
-[AutoInterface]
+[AutoInterface(Namespace = "Rake.Core.Downloading")]
 internal readonly struct CopyProgress : ICopyProgress
 {
     public CopyProgress(

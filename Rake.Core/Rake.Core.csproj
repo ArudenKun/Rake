@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -11,7 +12,8 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="CSharpier.MsBuild" Version="0.30.4">
+      <PackageReference Include="CliWrap" Version="3.7.0" />
+      <PackageReference Include="CSharpier.MsBuild" Version="0.30.5">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -20,6 +22,8 @@
       <PackageReference Include="Humanizer.Core" Version="2.14.1" />
       <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
       <PackageReference Include="JsonExtensions" Version="1.2.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+      <PackageReference Include="Velopack" Version="0.0.1053" />
     </ItemGroup>
 
 </Project>

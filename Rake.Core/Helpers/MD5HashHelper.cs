@@ -1,13 +1,11 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
-namespace Rake.Helpers;
+namespace Rake.Core.Helpers;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage(
@@ -57,14 +55,7 @@ public static class MD5HashHelper
                 break;
             case Stream stream:
             {
-                using var buffer = MemoryPool<byte>.Shared.Rent(4096);
-                using var memoryStream = new MemoryStream();
-                int bytesRead;
-                while ((bytesRead = stream.Read(buffer.Memory.Span)) > 0)
-                {
-                    memoryStream.Write(buffer.Memory.Span[..bytesRead]);
-                }
-                bytes = memoryStream.ToArray();
+                bytes = ComputeStreamHashCore(stream);
                 break;
             }
             default:
@@ -74,6 +65,18 @@ public static class MD5HashHelper
         }
 
         return ComputeHashCore(bytes);
+    }
+
+    private static byte[] ComputeStreamHashCore(Stream stream)
+    {
+        using var buffer = MemoryPool<byte>.Shared.Rent(4096);
+        using var memoryStream = new MemoryStream();
+        int bytesRead;
+        while ((bytesRead = stream.Read(buffer.Memory.Span)) > 0)
+        {
+            memoryStream.Write(buffer.Memory.Span[..bytesRead]);
+        }
+        return memoryStream.ToArray();
     }
 
     private static unsafe string ComputeHashCore(ReadOnlySpan<byte> bytes)

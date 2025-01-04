@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Rake.Utilities;
-
-namespace Rake.Extensions;
+﻿namespace Rake.Core.Extensions;
 
 public static class DisposableExtensions
 {

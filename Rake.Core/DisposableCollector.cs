@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using Rake.Extensions;
+﻿using Rake.Core.Extensions;
 
-namespace Rake.Utilities;
+namespace Rake.Core;
 
-public class DisposableCollector : IDisposable
+public sealed class DisposableCollector : IDisposable
 {
     private readonly Lock _lock = new();
     private readonly List<IDisposable> _items = [];

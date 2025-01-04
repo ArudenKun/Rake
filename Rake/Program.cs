@@ -3,7 +3,7 @@ using Avalonia;
 using Humanizer;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
-using Rake.Helpers;
+using Rake.Core.Helpers;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.AsyncFile;
@@ -64,7 +64,6 @@ public static class Program
                     MESSAGEBOX_STYLE.MB_ICONERROR
                 );
             }
-
             throw;
         }
         finally
