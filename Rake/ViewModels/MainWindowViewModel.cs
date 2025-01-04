@@ -1,17 +1,8 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
-using Avalonia.Threading;
+﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
-using Gress;
 using Microsoft.Extensions.Logging;
-using Rake.Extensions;
 using Rake.Services;
 using Rake.ViewModels.Abstractions;
-using SukiUI.Toasts;
 using Velopack.Locators;
 
 namespace Rake.ViewModels;
@@ -20,23 +11,23 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 {
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly UpdateService _updateService;
-    private readonly Dispatcher _dispatcher;
     private readonly SettingsService _settingsService;
     private readonly IVelopackLocator _velopackLocator;
+    private readonly ISnackbarService _snackbarService;
 
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
         UpdateService updateService,
-        Dispatcher dispatcher,
         SettingsService settingsService,
-        IVelopackLocator velopackLocator
+        IVelopackLocator velopackLocator,
+        ISnackbarService snackbarService
     )
     {
         _logger = logger;
         _updateService = updateService;
-        _dispatcher = dispatcher;
         _settingsService = settingsService;
         _velopackLocator = velopackLocator;
+        _snackbarService = snackbarService;
     }
 
     public string Greeting =>
@@ -44,8 +35,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     protected override async Task OnLoadedAsync()
     {
-        _logger.LogInformation("Checking for updates");
-        await CheckForUpdatesAsync();
+        // await CheckForUpdatesAsync();
     }
 
     protected override void Dispose(bool disposing)
@@ -53,7 +43,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         if (disposing)
         {
             _settingsService.Save();
-            _updateService.FinalizeUpdate();
+            _updateService.FinalizeUpdate(false);
         }
 
         base.Dispose(disposing);
@@ -62,84 +52,93 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task ShowYesNoDialog()
     {
-        await ToastManager
-            .CreateSimpleInfoToast()
-            .WithTitle("Test")
-            .WithContent("Test content")
-            .QueueAndWaitAsync();
+        _snackbarService.Notify("Are you sure you want to close this window?", "Yes", () => { });
+        // .CreateSimpleInfoToast()
+        // .WithTitle("Test")
+        // .WithContent("Test content")
+        // .Dismiss()
+        // .ByClicking()
+        // .QueueAndWaitAsync();
 
-        _logger.LogInformation("Showing YesNoDialog");
+        _logger.LogInformation("Finished Showing YesNoDialog");
     }
 
-    private async Task CheckForUpdatesAsync()
-    {
-        ToastManager
-            .CreateSimpleInfoToast()
-            .WithTitle("Checking For Updates")
-            .WithContent("Updates Found")
-            .Queue();
-        try
-        {
-            var updateInfo = await _updateService.CheckForUpdatesAsync();
-            if (updateInfo is null)
-                return;
-
-            _logger.LogInformation("Update found {0}", updateInfo.TargetFullRelease.Version);
-
-            await ToastManager
-                .CreateToast()
-                .WithTitle("Update Found")
-                .WithContent($"Preparing to Download {updateInfo.TargetFullRelease.Version}")
-                .Dismiss()
-                .After(TimeSpan.FromSeconds(2))
-                .QueueAndWaitAsync()
-                .ConfigureAwait(false);
-
-            var progressBar = new ProgressBar { Value = 0, ShowProgressText = true };
-            var progress = new Progress<Percentage>(percentage =>
-                progressBar.Value = percentage.Value
-            );
-            var downloadToast = ToastManager
-                .CreateToast()
-                .WithTitle("Downloading Update")
-                .WithContent(progressBar)
-                .Queue();
-
-            await _dispatcher.Invoke(async () =>
-            {
-                await _updateService
-                    .PrepareUpdatesAsync(updateInfo, progress)
-                    .ConfigureAwait(false);
-                ToastManager.Dismiss(downloadToast);
-            });
-
-            ToastManager
-                .CreateToast()
-                .WithTitle("Download Finished")
-                .WithContent($"Update {updateInfo.TargetFullRelease.Version} has been downloaded")
-                .WithActionButtonNormal("Later", _ => { })
-                .WithActionButton(
-                    "Now",
-                    _ =>
-                    {
-                        _updateService.FinalizeUpdate();
-                        if (Application.Current?.ApplicationLifetime?.TryShutdown(2) != true)
-                            Environment.Exit(2);
-                    }
-                )
-                .Queue();
-
-            OnPropertyChanged(new PropertyChangedEventArgs(Greeting));
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Update Failed");
-            ToastManager
-                .CreateToast()
-                .WithTitle("Error")
-                .WithContent("An Error Occured While Performing the Update")
-                .OfType(NotificationType.Error)
-                .Queue();
-        }
-    }
+    // private async Task CheckForUpdatesAsync()
+    // {
+    //     try
+    //     {
+    //         _logger.LogInformation("Checking for updates");
+    //
+    //         await ToastManager
+    //             .CreateSimpleInfoToast()
+    //             .WithTitle("Update")
+    //             .WithContent("Checking for Updates")
+    //             .QueueAndWaitAsync();
+    //
+    //         var updateInfo = await _updateService.CheckForUpdatesAsync();
+    //         if (updateInfo is null)
+    //         {
+    //             ToastManager
+    //                 .CreateSimpleInfoToast()
+    //                 .WithTitle("Update")
+    //                 .WithContent("No Updates Found")
+    //                 .Queue();
+    //
+    //             return;
+    //         }
+    //
+    //         _logger.LogInformation("Update Found {0}", updateInfo.TargetFullRelease.Version);
+    //
+    //         await ToastManager
+    //             .CreateToast()
+    //             .WithTitle("Update Found")
+    //             .WithContent($"Preparing to Download {updateInfo.TargetFullRelease.Version}")
+    //             .Dismiss()
+    //             .After(2)
+    //             .QueueAndWaitAsync();
+    //
+    //         _logger.LogInformation("Update Preparation Finished");
+    //         var progressBar = new ProgressBar { Value = 0, ShowProgressText = true };
+    //         var downloadToast = ToastManager
+    //             .CreateToast()
+    //             .WithTitle("Downloading Update")
+    //             .WithContent(progressBar)
+    //             .Queue();
+    //         var progress = new Progress<Percentage>(percentage =>
+    //             Dispatcher.UIThread.Invoke(() => progressBar.Value = percentage.Value)
+    //         );
+    //         await _updateService.PrepareUpdatesAsync(updateInfo, progress);
+    //         ToastManager.Dismiss(downloadToast);
+    //         ToastManager
+    //             .CreateToast()
+    //             .WithTitle("Download Finished")
+    //             .WithContent($"Update {updateInfo.TargetFullRelease.Version} has been downloaded")
+    //             .WithActionButtonNormal("Install Later", _ => { }, true)
+    //             .WithActionButton(
+    //                 "Install Now",
+    //                 _ =>
+    //                 {
+    //                     _updateService.FinalizeUpdate();
+    //                     if (Application.Current?.ApplicationLifetime?.TryShutdown(2) != true)
+    //                         Environment.Exit(2);
+    //                 }
+    //             )
+    //             .Queue();
+    //
+    //         OnPropertyChanged(new PropertyChangedEventArgs(Greeting));
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         _logger.LogError(e, "Update Failed");
+    //         ToastManager
+    //             .CreateToast()
+    //             .WithTitle("Error")
+    //             .WithContent("An Error Occured While Performing the Update")
+    //             .OfType(NotificationType.Error)
+    //             .Dismiss()
+    //             .ByClicking()
+    //             .WithActionButton("Ok", true)
+    //             .Queue();
+    //     }
+    // }
 }

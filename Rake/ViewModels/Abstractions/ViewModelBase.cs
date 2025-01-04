@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using SukiUI.Dialogs;
-using SukiUI.Toasts;
 
 namespace Rake.ViewModels.Abstractions;
 
 public abstract partial class ViewModelBase : ObservableObject, IDisposable
 {
-    public ISukiDialogManager DialogManager { get; } = new SukiDialogManager();
-    public ISukiToastManager ToastManager { get; } = new SukiToastManager();
-
     [RelayCommand]
     private Task Loaded() => OnLoadedAsync();
 

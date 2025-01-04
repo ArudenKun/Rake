@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using AutoInterfaceAttributes;
 using Gress;
 using Microsoft.Extensions.Logging;
+using Rake.Models;
 using Velopack;
 using Velopack.Sources;
 
@@ -15,8 +16,8 @@ public sealed class UpdateService
 
     private readonly ILogger<UpdateService> _logger;
     private readonly SettingsService _settingsService;
-    private readonly UpdateManager _updateManager;
 
+    private readonly Dictionary<string, UpdateManager> _updateManagers = new();
     private UpdateInfo? _updateInfo;
     private bool _updatePrepared;
     private bool _updaterLaunched;
@@ -25,24 +26,40 @@ public sealed class UpdateService
     {
         _logger = logger;
         _settingsService = settingsService;
-        // _updateManager = new UpdateManager(
-        //     new GithubSource(RepositoryUrl, null, true),
-        //     new UpdateOptions
-        //     {
-        //         ExplicitChannel =
-        //             $"{_settingsService.UpdateChannel}.{RuntimeInformation.RuntimeIdentifier}",
-        //     },
-        //     _logger
-        // );
-        _updateManager = new UpdateManager(@"O:\Projects\Rake\releases", null, logger);
+    }
+
+    private UpdateManager UpdateManager
+    {
+        get
+        {
+            var channel =
+                $"{_settingsService.UpdateChannel}.{RuntimeInformation.RuntimeIdentifier}";
+
+            if (_updateManagers.TryGetValue(channel, out var updateManager))
+                return updateManager;
+
+            updateManager = new UpdateManager(
+                new GithubSource(
+                    RepositoryUrl,
+                    null,
+                    _settingsService.UpdateChannel is UpdateChannel.Beta or UpdateChannel.Dev
+                ),
+                new UpdateOptions { ExplicitChannel = channel },
+                _logger
+            );
+
+            _updateManagers[channel] = updateManager;
+
+            return updateManager;
+        }
     }
 
     public async Task<UpdateInfo?> CheckForUpdatesAsync()
     {
-        if (!_updateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
+        if (!UpdateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
             return null;
 
-        return await _updateManager.CheckForUpdatesAsync().ConfigureAwait(false);
+        return await UpdateManager.CheckForUpdatesAsync();
     }
 
     public async Task PrepareUpdatesAsync(
@@ -50,17 +67,15 @@ public sealed class UpdateService
         IProgress<Percentage>? progress = null
     )
     {
-        if (!_updateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
+        if (!UpdateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
             return;
 
         try
         {
-            await _updateManager
-                .DownloadUpdatesAsync(
-                    _updateInfo = updateInfo,
-                    i => progress?.Report(Percentage.FromValue(i))
-                )
-                .ConfigureAwait(false);
+            await UpdateManager.DownloadUpdatesAsync(
+                _updateInfo = updateInfo,
+                i => progress?.Report(Percentage.FromValue(i))
+            );
             _updatePrepared = true;
         }
         catch (Exception e)
@@ -71,13 +86,13 @@ public sealed class UpdateService
 
     public void FinalizeUpdate(bool restart = true)
     {
-        if (!_updateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
+        if (!UpdateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
             return;
 
         if (_updateInfo is null || !_updatePrepared || _updaterLaunched)
             return;
 
-        _updateManager.WaitExitThenApplyUpdates(_updateInfo, restart);
+        UpdateManager.WaitExitThenApplyUpdates(_updateInfo, false, restart);
         _updaterLaunched = true;
     }
 }

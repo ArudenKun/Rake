@@ -8,6 +8,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HotAvalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Rake.Core;
@@ -17,8 +18,6 @@ using Rake.Extensions;
 using Rake.Services;
 using Rake.ViewModels;
 using Serilog;
-using SukiUI.Dialogs;
-using SukiUI.Toasts;
 using Velopack.Locators;
 
 namespace Rake;
@@ -32,8 +31,8 @@ public sealed class App : Application, IDisposable
         var services = new ServiceCollection();
         services.AddSingleton<SettingsService>();
         services.AddSingleton<UpdateService>();
-        services.AddSingleton<ISukiDialogManager, SukiDialogManager>();
-        services.AddSingleton<ISukiToastManager, SukiToastManager>();
+        services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<ISnackbarService, SnackbarService>();
         services.AddSingleton<IVelopackLocator>(sp =>
             VelopackLocator.GetDefault(sp.GetRequiredService<ILogger<IVelopackLocator>>())
         );
@@ -45,7 +44,11 @@ public sealed class App : Application, IDisposable
         Ioc.Default.ConfigureServices(_serviceProvider);
     }
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        this.EnableHotReload();
+        AvaloniaXamlLoader.Load(this);
+    }
 
     [RequiresUnreferencedCode("Calls Avalonia.Data.Core.Plugins.BindingPlugins.DataValidators")]
 #pragma warning disable IL2046

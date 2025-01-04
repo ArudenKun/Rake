@@ -5,4 +5,5 @@ public enum UpdateChannel
     Stable,
     Dev,
     Beta,
+    Alpha,
 }
