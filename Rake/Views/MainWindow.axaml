@@ -1,11 +1,10 @@
-<Window
+<suki:SukiWindow
     x:Class="Rake.Views.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
-    xmlns:materialStyles="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:suki="using:SukiUI.Controls"
     xmlns:vm="using:Rake.ViewModels"
     Title="Rake"
     d:DesignHeight="450"
@@ -16,16 +15,12 @@
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
-    <dialogHostAvalonia:DialogHost x:Name="DialogHost" CloseOnClickAway="False">
-        <materialStyles:SnackbarHost HostName="Root">
-            <StackPanel>
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Text="{Binding Greeting}" />
-                <Button Command="{Binding ShowYesNoDialogCommand}">Show</Button>
-            </StackPanel>
-        </materialStyles:SnackbarHost>
-    </dialogHostAvalonia:DialogHost>
+    <StackPanel>
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Text="{Binding Greeting}" />
+        <Button Command="{Binding ShowYesNoDialogCommand}">Show</Button>
+    </StackPanel>
 
-</Window>
+</suki:SukiWindow>

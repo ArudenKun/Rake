@@ -13,21 +13,18 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private readonly UpdateService _updateService;
     private readonly SettingsService _settingsService;
     private readonly IVelopackLocator _velopackLocator;
-    private readonly ISnackbarService _snackbarService;
 
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
         UpdateService updateService,
         SettingsService settingsService,
-        IVelopackLocator velopackLocator,
-        ISnackbarService snackbarService
+        IVelopackLocator velopackLocator
     )
     {
         _logger = logger;
         _updateService = updateService;
         _settingsService = settingsService;
         _velopackLocator = velopackLocator;
-        _snackbarService = snackbarService;
     }
 
     public string Greeting =>
@@ -52,7 +49,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task ShowYesNoDialog()
     {
-        _snackbarService.Notify("Are you sure you want to close this window?", "Yes", () => { });
         // .CreateSimpleInfoToast()
         // .WithTitle("Test")
         // .WithContent("Test content")

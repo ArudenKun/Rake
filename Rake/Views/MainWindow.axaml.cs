@@ -3,7 +3,7 @@ using Rake.Views.Abstractions;
 
 namespace Rake.Views;
 
-public sealed partial class MainWindow : Window<MainWindowViewModel>
+public sealed partial class MainWindow : SukiWindow<MainWindowViewModel>
 {
     public MainWindow()
     {

@@ -22,7 +22,6 @@
       <PackageReference Include="Humanizer.Core" Version="2.14.1" />
       <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
       <PackageReference Include="JsonExtensions" Version="1.2.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
       <PackageReference Include="Velopack" Version="0.0.1053" />
     </ItemGroup>
 
