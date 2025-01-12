@@ -34,7 +34,7 @@ public sealed class UpdateService
             var channel =
                 $"{_settingsService.UpdateChannel}.{RuntimeInformation.RuntimeIdentifier}";
 
-            _logger.LogDebug($"Current channel {channel}");
+            _logger.LogDebug("Current channel {Channel}", channel);
 
             if (_updateManagers.TryGetValue(channel, out var updateManager))
                 return updateManager;
@@ -58,7 +58,15 @@ public sealed class UpdateService
         }
     }
 
+    /// <summary>
+    /// Get's the current version, 0.0.0 if Debug
+    /// </summary>
     public SemanticVersion CurrentVersion => UpdateManager.CurrentVersion ?? EmptyVersion;
+
+    /// <summary>
+    /// Get's the new version, 0.0.0 if there is no new version
+    /// </summary>
+    public SemanticVersion NewVersion => UpdatePackage?.TargetFullRelease.Version ?? EmptyVersion;
 
     public UpdateInfo? UpdatePackage { get; private set; }
 

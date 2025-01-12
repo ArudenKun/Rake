@@ -1,45 +1,32 @@
 ﻿using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Input;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 using Rake.Extensions;
-using Rake.Models.Messages;
 using Rake.Services;
-using Rake.ViewModels.Abstractions;
+using SukiUI.Dialogs;
 using SukiUI.Toasts;
 
 namespace Rake.ViewModels;
 
-public sealed partial class MainWindowViewModel : ViewModelBase, IRecipient<UpdateSkippedMessage>
+public sealed partial class MainWindowViewModel : AbstractViewModel
 {
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly ViewModelFactory _viewModelFactory;
     private readonly UpdateService _updateService;
     private readonly SettingsService _settingsService;
-    private readonly DashboardViewModel _dashboardViewModel;
-
-    [ObservableProperty]
-    private ViewModelBase _currentViewModel;
+    private readonly ViewModelFactory _viewModelFactory;
 
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
-        ViewModelFactory viewModelFactory,
         UpdateService updateService,
         SettingsService settingsService,
-        DashboardViewModel dashboardViewModel
+        ViewModelFactory viewModelFactory
     )
     {
-        Messenger.Register(this);
-
         _logger = logger;
-        _viewModelFactory = viewModelFactory;
         _updateService = updateService;
         _settingsService = settingsService;
-        _dashboardViewModel = dashboardViewModel;
-
-        // CurrentViewModel = _serviceProvider.GetRequiredService<UpdateViewModel>();
-        CurrentViewModel = _dashboardViewModel;
+        _viewModelFactory = viewModelFactory;
     }
 
     protected override async Task OnLoadedAsync()
@@ -87,28 +74,32 @@ public sealed partial class MainWindowViewModel : ViewModelBase, IRecipient<Upda
             return;
         }
 
-        if (_settingsService.VersionsToSkip.Contains(updateInfo.TargetFullRelease.Version))
+        if (
+            _settingsService.VersionsToSkip.TryGetValue(
+                updateInfo.TargetFullRelease.Version,
+                out var skippedVersion
+            )
+        )
         {
             _logger.LogInformation("Skipping update {0}", updateInfo.TargetFullRelease.Version);
             ToastManager
                 .CreateSimpleInfoToast()
                 .WithTitle("Skipping Update")
-                .WithContent("")
+                .WithContent($"Skipping {skippedVersion}")
                 .Queue();
             return;
         }
 
         _logger.LogInformation("Updates found {0}", updateInfo.TargetFullRelease.Version);
-        CurrentViewModel = _viewModelFactory.CreateUpdateViewModel(
-            updateInfo,
-            _updateService.CurrentVersion
-        );
+        ShowUpdateDialog();
     }
 
-    public void Receive(UpdateSkippedMessage message)
+    [RelayCommand]
+    private void ShowUpdateDialog()
     {
-        _settingsService.VersionsToSkip.Add(message.Version);
-        _logger.LogInformation("Update skipped, Loading dashboard");
-        CurrentViewModel = _dashboardViewModel;
+        DialogManager
+            .CreateDialog()
+            .WithViewModel(_viewModelFactory.CreateUpdateViewModel)
+            .TryShow();
     }
 }

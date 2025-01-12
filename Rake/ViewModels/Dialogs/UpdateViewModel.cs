@@ -1,20 +1,19 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Gress;
 using NuGet.Versioning;
 using Rake.Core;
-using Rake.Models.Messages;
 using Rake.Services;
-using Rake.ViewModels.Abstractions;
-using Velopack;
+using SukiUI.Dialogs;
 
-namespace Rake.ViewModels;
+namespace Rake.ViewModels.Dialogs;
 
-public sealed partial class UpdateViewModel : ViewModelBase
+public sealed partial class UpdateViewModel : AbstractViewModel
 {
     private readonly UpdateService _updateService;
+    private readonly SettingsService _settingsService;
 
     [ObservableProperty]
     private Percentage _downloadPercentage;
@@ -32,19 +31,33 @@ public sealed partial class UpdateViewModel : ViewModelBase
     private SemanticVersion _newVersion = new(0, 0, 0);
 
     [ObservableProperty]
-    private VelopackAsset? _updatePackage;
-
-    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SkipCommand))]
     private bool _isUpdating;
 
-    public UpdateViewModel(UpdateService updateService) => _updateService = updateService;
+    private ISukiDialog? _dialog;
+
+    public ISukiDialog Dialog
+    {
+        get => _dialog ?? throw new InvalidOperationException("Dialog not set");
+        set => _dialog = value;
+    }
+
+    public UpdateViewModel(UpdateService updateService, SettingsService settingsService)
+    {
+        _updateService = updateService;
+        _settingsService = settingsService;
+
+        CurrentVersion = _updateService.CurrentVersion;
+        NewVersion = _updateService.NewVersion;
+    }
 
     [RelayCommand]
     private async Task Update()
     {
-        if (UpdatePackage is null)
+        if (_updateService.UpdatePackage is null)
+        {
             return;
+        }
 
         IsUpdating = true;
         var progress = new BufferedProgress<Percentage>(percentage =>
@@ -61,5 +74,9 @@ public sealed partial class UpdateViewModel : ViewModelBase
     private bool CanSkip => !IsUpdating;
 
     [RelayCommand(CanExecute = nameof(CanSkip))]
-    private void Skip() => Messenger.Send(new UpdateSkippedMessage(NewVersion));
+    private void Skip()
+    {
+        _settingsService.VersionsToSkip.Add(NewVersion);
+        Dialog.Dismiss();
+    }
 }

@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
-using Cogwheel;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
+using Rake.Core;
+using Rake.Core.Converters;
 using Rake.Core.Helpers;
 using Rake.Models;
 
@@ -11,7 +13,7 @@ namespace Rake.Services;
 
 [INotifyPropertyChanged]
 [PublicAPI]
-public sealed partial class SettingsService : SettingsBase
+public sealed partial class SettingsService : AbstractJsonPersistence
 {
     private readonly ILogger<SettingsService> _logger;
 
@@ -20,6 +22,7 @@ public sealed partial class SettingsService : SettingsBase
     private HashSet<SemanticVersion> _versionsToSkip = [];
     private bool _isMultipleInstancesEnabled;
     private int _parallelLimit = 4;
+    private ThemeVariant _theme = ThemeVariant.Default;
 
     /// <inheritdoc/>
     public SettingsService(ILogger<SettingsService> logger)
@@ -40,6 +43,7 @@ public sealed partial class SettingsService : SettingsBase
         set => SetProperty(ref _updateChannel, value);
     }
 
+    [JsonConverter(typeof(SemanticVersionHashSetJsonConverter))]
     public HashSet<SemanticVersion> VersionsToSkip
     {
         get => _versionsToSkip;
@@ -58,5 +62,9 @@ public sealed partial class SettingsService : SettingsBase
         set => SetProperty(ref _parallelLimit, value);
     }
 
-    public ThemeVariant Theme { get; set; } = ThemeVariant.Default;
+    public ThemeVariant Theme
+    {
+        get => _theme;
+        set => SetProperty(ref _theme, value);
+    }
 }

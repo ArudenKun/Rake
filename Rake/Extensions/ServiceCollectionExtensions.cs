@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Rake.ViewModels.Abstractions;
+using Rake.ViewModels;
 using ServiceScan.SourceGenerator;
 
 namespace Rake.Extensions;
@@ -7,7 +7,7 @@ namespace Rake.Extensions;
 public static partial class ServiceCollectionExtensions
 {
     [GenerateServiceRegistrations(
-        AssignableTo = typeof(ViewModelBase),
+        AssignableTo = typeof(AbstractViewModel),
         Lifetime = ServiceLifetime.Transient,
         AsSelf = true
     )]

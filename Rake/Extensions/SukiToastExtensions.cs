@@ -27,22 +27,6 @@ public static class SukiToastExtensions
         }
     }
 
-    public static SukiToastBuilder WithActionButton(
-        this SukiToastBuilder builder,
-        object buttonContent,
-        bool dismissOnClick = false
-    ) => builder.WithActionButton(buttonContent, _ => { }, dismissOnClick);
-
-    public static SukiToastBuilder WithActionButtonNormal(
-        this SukiToastBuilder builder,
-        object buttonContent,
-        bool dismissOnClick = false
-    )
-    {
-        builder.AddActionButton(buttonContent, _ => { }, dismissOnClick, false);
-        return builder;
-    }
-
     public static SukiToastBuilder After(
         this SukiToastBuilder.DismissToast dismissToast,
         int seconds

@@ -1,11 +1,11 @@
 ﻿using System;
 using Avalonia.Controls;
-using ViewModelBase = Rake.ViewModels.Abstractions.ViewModelBase;
+using Rake.ViewModels;
 
-namespace Rake.Views.Abstractions;
+namespace Rake.Views;
 
-public abstract class UserControlBase<TViewModel> : UserControl
-    where TViewModel : ViewModelBase
+public abstract class AbstractUserControl<TViewModel> : UserControl
+    where TViewModel : AbstractViewModel
 {
     public new TViewModel DataContext
     {

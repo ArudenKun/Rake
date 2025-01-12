@@ -1,11 +1,11 @@
 ﻿using System;
+using Rake.ViewModels;
 using SukiUI.Controls;
-using ViewModelBase = Rake.ViewModels.Abstractions.ViewModelBase;
 
-namespace Rake.Views.Abstractions;
+namespace Rake.Views;
 
-public abstract class SukiWindowBase<TViewModel> : SukiWindow
-    where TViewModel : ViewModelBase
+public abstract class AbstractSukiWindow<TViewModel> : SukiWindow
+    where TViewModel : AbstractViewModel
 {
     public new TViewModel DataContext
     {

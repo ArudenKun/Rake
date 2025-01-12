@@ -20,10 +20,18 @@
         <suki:SukiToastHost Manager="{Binding ToastManager}" />
     </suki:SukiWindow.Hosts>
 
-    <TransitioningContentControl Content="{Binding CurrentViewModel}">
-        <TransitioningContentControl.PageTransition>
-            <CrossFade Duration="0:00:00.250" />
-        </TransitioningContentControl.PageTransition>
-    </TransitioningContentControl>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <!-- <TextBlock Text="{Binding}" /> -->
+        <!-- <TextBlock Text="{Binding}" /> -->
+        <TextBlock Text="Test" />
+        <TextBlock Text="Test1" />
+        <Button Command="{Binding ShowUpdateDialogCommand}" Content="Show Update" />
+    </StackPanel>
+
+    <!-- <TransitioningContentControl Content="{Binding CurrentViewModel}"> -->
+    <!--     <TransitioningContentControl.PageTransition> -->
+    <!--         <CrossFade Duration="0:00:00.250" /> -->
+    <!--     </TransitioningContentControl.PageTransition> -->
+    <!-- </TransitioningContentControl> -->
 
 </suki:SukiWindow>

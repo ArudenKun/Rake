@@ -5,8 +5,9 @@ using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using JetBrains.Annotations;
 using Rake.ViewModels;
-using Rake.ViewModels.Abstractions;
 using Rake.Views;
+using Rake.Views.Dialogs;
+using UpdateViewModel = Rake.ViewModels.Dialogs.UpdateViewModel;
 
 namespace Rake;
 
@@ -18,15 +19,14 @@ public sealed class ViewLocator : IDataTemplate
     public ViewLocator()
     {
         Register<MainWindow, MainWindowViewModel>();
-        Register<DashboardView, DashboardViewModel>();
         Register<UpdateView, UpdateViewModel>();
     }
 
     public void Register<TControl, TViewModel>()
         where TControl : Control, new()
-        where TViewModel : ViewModelBase => _map[typeof(TViewModel)] = () => new TControl();
+        where TViewModel : AbstractViewModel => _map[typeof(TViewModel)] = () => new TControl();
 
-    public Control TryBindView(ViewModelBase viewModel)
+    public Control TryBindView(AbstractViewModel viewModel)
     {
         var view = TryCreateView(viewModel);
         if (view is null)
@@ -39,10 +39,10 @@ public sealed class ViewLocator : IDataTemplate
         return view;
     }
 
-    private Control? TryCreateView(ViewModelBase viewModel) =>
+    private Control? TryCreateView(AbstractViewModel viewModel) =>
         _map.TryGetValue(viewModel.GetType(), out var factory) ? factory() : null;
 
-    public static void BindEvents(Control control, ViewModelBase viewModel)
+    public static void BindEvents(Control control, AbstractViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(control);
@@ -63,8 +63,8 @@ public sealed class ViewLocator : IDataTemplate
         }
     }
 
-    bool IDataTemplate.Match(object? data) => data is ViewModelBase;
+    bool IDataTemplate.Match(object? data) => data is AbstractViewModel;
 
     Control? ITemplate<object?, Control?>.Build(object? data) =>
-        data is ViewModelBase viewModel ? TryBindView(viewModel) : null;
+        data is AbstractViewModel viewModel ? TryBindView(viewModel) : null;
 }

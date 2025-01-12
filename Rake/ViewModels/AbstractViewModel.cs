@@ -10,7 +10,7 @@ using Rake.Extensions;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
 
-namespace Rake.ViewModels.Abstractions;
+namespace Rake.ViewModels;
 
 [AutoInterface(
     Name = "IViewModel",
@@ -20,7 +20,7 @@ namespace Rake.ViewModels.Abstractions;
         typeof(INotifyPropertyChanging),
     ]
 )]
-public abstract partial class ViewModelBase : ObservableRecipient, IViewModel
+public abstract partial class AbstractViewModel : ObservableRecipient, IViewModel
 {
     public ISukiDialogManager DialogManager { get; } = new SukiDialogManager();
     public ISukiToastManager ToastManager { get; } = new SukiToastManager();
@@ -30,7 +30,7 @@ public abstract partial class ViewModelBase : ObservableRecipient, IViewModel
 
     protected virtual Task OnLoadedAsync() => Task.CompletedTask;
 
-    protected static void ExitApplication()
+    protected virtual void ExitApplication()
     {
         if (Application.Current?.ApplicationLifetime?.TryShutdown(2) is not true)
             Environment.Exit(2);
@@ -65,7 +65,7 @@ public abstract partial class ViewModelBase : ObservableRecipient, IViewModel
     protected static async Task<TResult> DispatchAsync<TResult>(Func<TResult> action) =>
         await Dispatcher.UIThread.InvokeAsync(action);
 
-    ~ViewModelBase() => Dispose(false);
+    ~AbstractViewModel() => Dispose(false);
 
     protected void OnAllPropertiesChanged() => OnPropertyChanged(string.Empty);
 
