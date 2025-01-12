@@ -8,5 +8,4 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:DashboardViewModel"
-    mc:Ignorable="d">
-</UserControl>
+    mc:Ignorable="d" />
