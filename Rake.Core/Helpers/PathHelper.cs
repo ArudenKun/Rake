@@ -22,7 +22,10 @@ public static class PathHelper
     ///     Returns the path of the ApplicationData.
     /// </summary>
     public static string DataDirectory =>
-        Locator.IsPortable ? AppRootDirectory.Combine("data") : RoamingDirectory.Combine(AppName);
+        // File.Exists(".portable") || Directory.Exists("data") ? AppRootDirectory.Combine("data") :
+        Locator.IsPortable
+            ? AppRootDirectory.Combine("data")
+            : RoamingDirectory.Combine(AppName);
 
     // File.Exists(BaseDirectory.Combine(".portable"))
     // || Directory.Exists(BaseDirectory.Combine("portable"))
@@ -124,6 +127,7 @@ public static class PathHelper
         {
             paths[i + 1] = parts[i];
         }
+
         return Path.Combine(paths.ToArray());
     }
 

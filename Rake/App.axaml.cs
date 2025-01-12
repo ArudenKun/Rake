@@ -8,7 +8,6 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using HotAvalonia;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Rake.ViewModels;
 
 namespace Rake;
@@ -35,13 +34,14 @@ public sealed class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Avoid duplicate validations from both Avalonia and the CommunityToolkit.
-            // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = (Window?)
-                DataTemplates
-                    .First()
-                    .Build(_serviceProvider.GetRequiredService<MainWindowViewModel>());
+            desktop.MainWindow =
+                DataTemplates[0].Build(_serviceProvider.GetRequiredService<MainWindowViewModel>())
+                as Window;
+        }
+        else
+        {
+            throw new PlatformNotSupportedException("Desktop is the only supported platform");
         }
 
         base.OnFrameworkInitializationCompleted();

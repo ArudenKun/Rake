@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
-namespace Rake.Core.Downloading;
+namespace Rake.Core;
 
 /// <summary>
 /// A <see cref="IProgress{T}"/> implementation that reports progress updates
@@ -124,7 +124,7 @@ public class BufferedProgress<T> : IProgress<T>
     /// In case more values are reported, causing that value to be discarded because
     /// of lack of empty space in the buffer, the Task will complete as canceled.
     /// </summary>
-    public Task WaitToFinish()
+    public Task WaitToFinishAsync()
     {
         lock (_buffer)
         {

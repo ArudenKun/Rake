@@ -31,9 +31,11 @@ public static class MD5HashHelper
 
     public static Guid GetGuidHash<T>(this T value) => new(value.GetMD5Hash());
 
-    public static string ComputeHash<T>(T value)
+    public static string ComputeHash<T>(T value, JsonSerializerOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(value);
+
+        options ??= _jsonSerializerOptions;
 
         byte[] bytes;
         switch (value)
@@ -59,7 +61,7 @@ public static class MD5HashHelper
                 break;
             }
             default:
-                var jsonString = JsonSerializer.Serialize(value, _jsonSerializerOptions);
+                var jsonString = JsonSerializer.Serialize(value, options);
                 bytes = Encoding.UTF8.GetBytes(jsonString);
                 break;
         }

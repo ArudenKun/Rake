@@ -15,6 +15,8 @@
     
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
@@ -33,20 +35,21 @@
         </PackageReference>
         <PackageReference Include="Cogwheel" Version="2.1.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-        <PackageReference Include="CSharpier.MsBuild" Version="0.30.5">
+        <PackageReference Include="CSharpier.MsBuild" Version="0.30.6">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="H.Pipes" Version="15.0.0" />
         <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10" />
         <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="R3Extensions.Avalonia" Version="1.2.9" />
         <PackageReference Include="Serilog.Enrichers.ClassName" Version="0.3.0" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
         <PackageReference Include="Serilog.Sinks.AsyncFile" Version="2.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <PackageReference Include="ServiceScan.SourceGenerator" Version="1.3.6">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -60,5 +63,17 @@
     <ItemGroup>
       <ProjectReference Include="..\Rake.Core\Rake.Core.csproj" />
       <ProjectReference Include="..\Rake.Hosting\Rake.Hosting.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="ViewModels\Dialogs\" />
+      <Folder Include="ViewModels\Toasts\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\DashboardView.axaml.cs">
+        <DependentUpon>DashboardView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>

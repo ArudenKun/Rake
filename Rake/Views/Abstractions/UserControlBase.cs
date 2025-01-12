@@ -1,10 +1,10 @@
 ﻿using System;
-using Rake.ViewModels.Abstractions;
-using SukiUI.Controls;
+using Avalonia.Controls;
+using ViewModelBase = Rake.ViewModels.Abstractions.ViewModelBase;
 
 namespace Rake.Views.Abstractions;
 
-public abstract class SukiWindow<TViewModel> : SukiWindow
+public abstract class UserControlBase<TViewModel> : UserControl
     where TViewModel : ViewModelBase
 {
     public new TViewModel DataContext

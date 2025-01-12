@@ -15,12 +15,15 @@
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
-    <StackPanel>
-        <TextBlock
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Text="{Binding Greeting}" />
-        <Button Command="{Binding ShowYesNoDialogCommand}">Show</Button>
-    </StackPanel>
+    <suki:SukiWindow.Hosts>
+        <suki:SukiDialogHost Manager="{Binding DialogManager}" />
+        <suki:SukiToastHost Manager="{Binding ToastManager}" />
+    </suki:SukiWindow.Hosts>
+
+    <TransitioningContentControl Content="{Binding CurrentViewModel}">
+        <TransitioningContentControl.PageTransition>
+            <CrossFade Duration="0:00:00.250" />
+        </TransitioningContentControl.PageTransition>
+    </TransitioningContentControl>
 
 </suki:SukiWindow>

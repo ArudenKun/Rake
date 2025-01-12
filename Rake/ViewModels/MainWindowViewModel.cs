@@ -1,38 +1,51 @@
 ﻿using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using Humanizer;
 using Microsoft.Extensions.Logging;
+using Rake.Extensions;
+using Rake.Models.Messages;
 using Rake.Services;
 using Rake.ViewModels.Abstractions;
-using Velopack.Locators;
+using SukiUI.Toasts;
 
 namespace Rake.ViewModels;
 
-public sealed partial class MainWindowViewModel : ViewModelBase
+public sealed partial class MainWindowViewModel : ViewModelBase, IRecipient<UpdateSkippedMessage>
 {
     private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly ViewModelFactory _viewModelFactory;
     private readonly UpdateService _updateService;
     private readonly SettingsService _settingsService;
-    private readonly IVelopackLocator _velopackLocator;
+    private readonly DashboardViewModel _dashboardViewModel;
+
+    [ObservableProperty]
+    private ViewModelBase _currentViewModel;
 
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
+        ViewModelFactory viewModelFactory,
         UpdateService updateService,
         SettingsService settingsService,
-        IVelopackLocator velopackLocator
+        DashboardViewModel dashboardViewModel
     )
     {
+        Messenger.Register(this);
+
         _logger = logger;
+        _viewModelFactory = viewModelFactory;
         _updateService = updateService;
         _settingsService = settingsService;
-        _velopackLocator = velopackLocator;
-    }
+        _dashboardViewModel = dashboardViewModel;
 
-    public string Greeting =>
-        _velopackLocator.CurrentlyInstalledVersion?.ToNormalizedString() ?? "Test";
+        // CurrentViewModel = _serviceProvider.GetRequiredService<UpdateViewModel>();
+        CurrentViewModel = _dashboardViewModel;
+    }
 
     protected override async Task OnLoadedAsync()
     {
-        // await CheckForUpdatesAsync();
+        _settingsService.Load();
+        await CheckForUpdatesAsync();
     }
 
     protected override void Dispose(bool disposing)
@@ -46,95 +59,56 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         base.Dispose(disposing);
     }
 
-    [RelayCommand]
-    private async Task ShowYesNoDialog()
+    private async Task CheckForUpdatesAsync()
     {
-        // .CreateSimpleInfoToast()
-        // .WithTitle("Test")
-        // .WithContent("Test content")
-        // .Dismiss()
-        // .ByClicking()
-        // .QueueAndWaitAsync();
+        if (!_settingsService.IsAutoCheckForUpdatesEnabled)
+        {
+            return;
+        }
 
-        _logger.LogInformation("Finished Showing YesNoDialog");
+        await Task.Delay(1.Seconds());
+        _logger.LogInformation("Checking for updates");
+        await ToastManager
+            .CreateSimpleInfoToast()
+            .WithTitle("Update")
+            .WithContent("Checking for updates")
+            .QueueAsync();
+
+        var updateInfo = await _updateService.CheckForUpdatesAsync(true);
+        if (updateInfo is null)
+        {
+            await Task.Delay(500);
+            _logger.LogInformation("No updates found");
+            ToastManager
+                .CreateSimpleInfoToast()
+                .WithTitle("Update")
+                .WithContent("No updates found")
+                .Queue();
+            return;
+        }
+
+        if (_settingsService.VersionsToSkip.Contains(updateInfo.TargetFullRelease.Version))
+        {
+            _logger.LogInformation("Skipping update {0}", updateInfo.TargetFullRelease.Version);
+            ToastManager
+                .CreateSimpleInfoToast()
+                .WithTitle("Skipping Update")
+                .WithContent("")
+                .Queue();
+            return;
+        }
+
+        _logger.LogInformation("Updates found {0}", updateInfo.TargetFullRelease.Version);
+        CurrentViewModel = _viewModelFactory.CreateUpdateViewModel(
+            updateInfo,
+            _updateService.CurrentVersion
+        );
     }
 
-    // private async Task CheckForUpdatesAsync()
-    // {
-    //     try
-    //     {
-    //         _logger.LogInformation("Checking for updates");
-    //
-    //         await ToastManager
-    //             .CreateSimpleInfoToast()
-    //             .WithTitle("Update")
-    //             .WithContent("Checking for Updates")
-    //             .QueueAndWaitAsync();
-    //
-    //         var updateInfo = await _updateService.CheckForUpdatesAsync();
-    //         if (updateInfo is null)
-    //         {
-    //             ToastManager
-    //                 .CreateSimpleInfoToast()
-    //                 .WithTitle("Update")
-    //                 .WithContent("No Updates Found")
-    //                 .Queue();
-    //
-    //             return;
-    //         }
-    //
-    //         _logger.LogInformation("Update Found {0}", updateInfo.TargetFullRelease.Version);
-    //
-    //         await ToastManager
-    //             .CreateToast()
-    //             .WithTitle("Update Found")
-    //             .WithContent($"Preparing to Download {updateInfo.TargetFullRelease.Version}")
-    //             .Dismiss()
-    //             .After(2)
-    //             .QueueAndWaitAsync();
-    //
-    //         _logger.LogInformation("Update Preparation Finished");
-    //         var progressBar = new ProgressBar { Value = 0, ShowProgressText = true };
-    //         var downloadToast = ToastManager
-    //             .CreateToast()
-    //             .WithTitle("Downloading Update")
-    //             .WithContent(progressBar)
-    //             .Queue();
-    //         var progress = new Progress<Percentage>(percentage =>
-    //             Dispatcher.UIThread.Invoke(() => progressBar.Value = percentage.Value)
-    //         );
-    //         await _updateService.PrepareUpdatesAsync(updateInfo, progress);
-    //         ToastManager.Dismiss(downloadToast);
-    //         ToastManager
-    //             .CreateToast()
-    //             .WithTitle("Download Finished")
-    //             .WithContent($"Update {updateInfo.TargetFullRelease.Version} has been downloaded")
-    //             .WithActionButtonNormal("Install Later", _ => { }, true)
-    //             .WithActionButton(
-    //                 "Install Now",
-    //                 _ =>
-    //                 {
-    //                     _updateService.FinalizeUpdate();
-    //                     if (Application.Current?.ApplicationLifetime?.TryShutdown(2) != true)
-    //                         Environment.Exit(2);
-    //                 }
-    //             )
-    //             .Queue();
-    //
-    //         OnPropertyChanged(new PropertyChangedEventArgs(Greeting));
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         _logger.LogError(e, "Update Failed");
-    //         ToastManager
-    //             .CreateToast()
-    //             .WithTitle("Error")
-    //             .WithContent("An Error Occured While Performing the Update")
-    //             .OfType(NotificationType.Error)
-    //             .Dismiss()
-    //             .ByClicking()
-    //             .WithActionButton("Ok", true)
-    //             .Queue();
-    //     }
-    // }
+    public void Receive(UpdateSkippedMessage message)
+    {
+        _settingsService.VersionsToSkip.Add(message.Version);
+        _logger.LogInformation("Update skipped, Loading dashboard");
+        CurrentViewModel = _dashboardViewModel;
+    }
 }

@@ -1,4 +1,6 @@
-﻿namespace Rake.Core.Extensions;
+﻿using R3;
+
+namespace Rake.Core.Extensions;
 
 public static class DisposableExtensions
 {
@@ -23,7 +25,7 @@ public static class DisposableExtensions
     }
 
     /// <summary>
-    /// Ensures the provided disposable is disposed with the specified <see cref="DisposableCollector"/>.
+    /// Ensures the provided disposable is disposed with the specified <see cref="CompositeDisposable"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of the disposable.
@@ -31,16 +33,16 @@ public static class DisposableExtensions
     /// <param name="disposable">
     /// The disposable we are going to want to be disposed by the DisposableCollector.
     /// </param>
-    /// <param name="disposableCollector">
-    /// The <see cref="DisposableCollector"/> to which <paramref name="disposable"/> will be added.
+    /// <param name="disposables">
+    /// The <see cref="CompositeDisposable"/> to which <paramref name="disposable"/> will be added.
     /// </param>
     /// <returns>
     /// The disposable.
     /// </returns>
-    public static T DisposeWith<T>(this T disposable, DisposableCollector disposableCollector)
+    public static T DisposeWith<T>(this T disposable, CompositeDisposable disposables)
         where T : IDisposable
     {
-        disposableCollector.Add(disposable);
+        disposables.Add(disposable);
         return disposable;
     }
 }

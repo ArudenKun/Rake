@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Net;
+﻿using System.Net;
 using Flurl;
 using Rake.Core.Downloading.Internals;
 using Rake.Core.Helpers;
@@ -11,19 +10,12 @@ namespace Rake.Core.Downloading;
 ///     the sufficient <c>MaxConnection</c> of the <seealso cref="HttpClient" />
 ///     assigned into the current <seealso cref="Downloader" /> instance.
 /// </summary>
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 public sealed class Downloader
 {
     private const int DefaultConnectionSessions = 4;
     private const int DefaultRetryCountMax = 5;
-    internal const int MinimumDownloadSpeedLimit = 256 << 10; // 262144 bytes/s (256 KiB/s)
-
-    private TimeSpan RetryAttemptInterval { get; init; }
-    private int RetryCountMax { get; init; }
-    private TimeSpan TimeoutAfterInterval { get; init; }
-    private HttpClient CurrentHttpClientInstance { get; init; }
-
     private const int DefaultSessionChunkSize = 4 << 20; // 4 MiB for each chunk size
+    internal const int MinimumDownloadSpeedLimit = 256 << 10; // 262144 bytes/s (256 KiB/s)
 
     private Downloader(
         HttpClient httpClient,
@@ -41,6 +33,11 @@ public sealed class Downloader
         RetryCountMax = retryCountMax;
         CurrentHttpClientInstance = httpClient;
     }
+
+    private TimeSpan RetryAttemptInterval { get; }
+    private int RetryCountMax { get; }
+    private TimeSpan TimeoutAfterInterval { get; }
+    private HttpClient CurrentHttpClientInstance { get; }
 
     /// <summary>
     ///     Create an instance of a Http Download Client instance from the given <seealso cref="HttpClient" /> instance.
@@ -343,10 +340,10 @@ public sealed class Downloader
     /// <param name="url">The URL to check</param>
     /// <param name="cancelToken">The cancellation token</param>
     /// <returns>A tuple contains a <seealso cref="HttpResponseMessage.StatusCode"/> and an <seealso cref="bool"/> of the status code (true = success, false = failed)</returns>
-    public async ValueTask<(HttpStatusCode, bool)> GetURLStatus(
+    public async ValueTask<(HttpStatusCode, bool)> GetUrlStatus(
         string url,
         CancellationToken cancelToken
-    ) => await GetURLStatus(CurrentHttpClientInstance, url, cancelToken);
+    ) => await GetUrlStatus(CurrentHttpClientInstance, url, cancelToken);
 
     /// <summary>
     /// Get the Http's <seealso cref="HttpResponseMessage.StatusCode"/> of the URL.
@@ -354,10 +351,10 @@ public sealed class Downloader
     /// <param name="url">The URL to check</param>
     /// <param name="cancelToken">The cancellation token</param>
     /// <returns>A tuple contains a <seealso cref="HttpResponseMessage.StatusCode"/> and an <seealso cref="bool"/> of the status code (true = success, false = failed)</returns>
-    public async ValueTask<(HttpStatusCode, bool)> GetURLStatus(
+    public async ValueTask<(HttpStatusCode, bool)> GetUrlStatus(
         Url url,
         CancellationToken cancelToken
-    ) => await GetURLStatus(CurrentHttpClientInstance, url, cancelToken);
+    ) => await GetUrlStatus(CurrentHttpClientInstance, url, cancelToken);
 
     /// <summary>
     /// Get the Http's <seealso cref="HttpResponseMessage.StatusCode"/> of the URL from an <seealso cref="HttpClient"/> instance.
@@ -366,7 +363,7 @@ public sealed class Downloader
     /// <param name="url">The URL to check</param>
     /// <param name="cancelToken">The cancellation token</param>
     /// <returns>A tuple contains a <seealso cref="HttpResponseMessage.StatusCode"/> and an <seealso cref="bool"/> of the status code (true = success, false = failed)</returns>
-    public static async ValueTask<(HttpStatusCode, bool)> GetURLStatus(
+    public static async ValueTask<(HttpStatusCode, bool)> GetUrlStatus(
         HttpClient httpClient,
         Url url,
         CancellationToken cancelToken

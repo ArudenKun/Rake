@@ -4,21 +4,20 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Gress;
 using Microsoft.Extensions.Logging;
-using Rake.Models;
+using NuGet.Versioning;
 using Velopack;
-using Velopack.Sources;
 
 namespace Rake.Services;
 
 public sealed class UpdateService
 {
+    private static readonly SemanticVersion EmptyVersion = new(0, 0, 0);
     private const string RepositoryUrl = "https://github.com/ArudenKun/Rake";
 
     private readonly ILogger<UpdateService> _logger;
     private readonly SettingsService _settingsService;
 
     private readonly Dictionary<string, UpdateManager> _updateManagers = new();
-    private UpdateInfo? _updateInfo;
     private bool _updatePrepared;
     private bool _updaterLaunched;
 
@@ -35,45 +34,56 @@ public sealed class UpdateService
             var channel =
                 $"{_settingsService.UpdateChannel}.{RuntimeInformation.RuntimeIdentifier}";
 
+            _logger.LogDebug($"Current channel {channel}");
+
             if (_updateManagers.TryGetValue(channel, out var updateManager))
                 return updateManager;
 
             updateManager = new UpdateManager(
-                new GithubSource(
-                    RepositoryUrl,
-                    null,
-                    _settingsService.UpdateChannel is UpdateChannel.Beta or UpdateChannel.Dev
-                ),
+                @"O:\Projects\Rake\releases",
+                // new GithubSource(
+                //     @"O:\Projects\Rake\releases",
+                //     null,
+                //     _settingsService.UpdateChannel
+                //         is UpdateChannel.Beta
+                //             or UpdateChannel.Dev
+                //             or UpdateChannel.Alpha
+                // ),
                 new UpdateOptions { ExplicitChannel = channel },
                 _logger
             );
 
             _updateManagers[channel] = updateManager;
-
             return updateManager;
         }
     }
 
-    public async Task<UpdateInfo?> CheckForUpdatesAsync()
+    public SemanticVersion CurrentVersion => UpdateManager.CurrentVersion ?? EmptyVersion;
+
+    public UpdateInfo? UpdatePackage { get; private set; }
+
+    public async Task<UpdateInfo?> CheckForUpdatesAsync(bool ignoreCache = false)
     {
-        if (!UpdateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
+        if (!UpdateManager.IsInstalled)
             return null;
 
-        return await UpdateManager.CheckForUpdatesAsync();
+        if (UpdatePackage is not null && !ignoreCache)
+        {
+            return UpdatePackage;
+        }
+
+        return UpdatePackage = await UpdateManager.CheckForUpdatesAsync();
     }
 
-    public async Task PrepareUpdatesAsync(
-        UpdateInfo updateInfo,
-        IProgress<Percentage>? progress = null
-    )
+    public async Task PrepareUpdatesAsync(IProgress<Percentage>? progress = null)
     {
-        if (!UpdateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
+        if (!UpdateManager.IsInstalled || UpdatePackage is null)
             return;
 
         try
         {
             await UpdateManager.DownloadUpdatesAsync(
-                _updateInfo = updateInfo,
+                UpdatePackage,
                 i => progress?.Report(Percentage.FromValue(i))
             );
             _updatePrepared = true;
@@ -84,15 +94,21 @@ public sealed class UpdateService
         }
     }
 
-    public void FinalizeUpdate(bool restart = true)
+    public void FinalizeUpdate(
+        bool restart = true,
+        bool silent = false,
+        params string[] restartArgs
+    )
     {
-        if (!UpdateManager.IsInstalled || !_settingsService.IsAutoUpdateEnabled)
+        if (
+            !UpdateManager.IsInstalled
+            || UpdatePackage is null
+            || !_updatePrepared
+            || _updaterLaunched
+        )
             return;
 
-        if (_updateInfo is null || !_updatePrepared || _updaterLaunched)
-            return;
-
-        UpdateManager.WaitExitThenApplyUpdates(_updateInfo, false, restart);
+        UpdateManager.WaitExitThenApplyUpdates(UpdatePackage, silent, restart, restartArgs);
         _updaterLaunched = true;
     }
 }

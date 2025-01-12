@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Rake.Core.Extensions;
+﻿namespace Rake.Core.Extensions;
 
 public static class GenericExtensions
 {

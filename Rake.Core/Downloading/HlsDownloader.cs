@@ -1,5 +1,3 @@
-﻿using AutoInterfaceAttributes;
-
-namespace Rake.Core.Downloading;
+﻿namespace Rake.Core.Downloading;
 
 public sealed class HlsDownloader { }

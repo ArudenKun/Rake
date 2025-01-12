@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Runtime.Versioning;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Threading;
+using H.Formatters;
+using H.Pipes;
 using Humanizer;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +19,7 @@ using Rake.Extensions;
 using Rake.Hosting;
 using Rake.Services;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.AsyncFile;
 using Velopack;
@@ -35,26 +40,109 @@ public static class Program
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("macos")]
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
-        ConfigureLogging();
+        var loggingLevelSwitch = ConfigureLogging();
+
         var builder = Host.CreateApplicationBuilder(args);
+
+        // Logging
+        builder.Services.AddSingleton(loggingLevelSwitch);
         builder.Services.AddSerilog(dispose: true);
+
+        // Services
         builder.Services.AddSingleton<SettingsService>();
         builder.Services.AddSingleton<UpdateService>();
+        builder.Services.AddSingleton<ViewModelFactory>();
         builder.Services.AddSingleton<IVelopackLocator>(sp =>
             VelopackLocator.GetDefault(sp.GetRequiredService<ILogger<IVelopackLocator>>())
         );
-        builder.Services.AddSingleton(_ => Dispatcher.UIThread);
         builder.Services.AddFactory(_ => Downloader.CreateInstance(HttpHelper.HttpClient));
+
+        // ViewModels
         builder.Services.AddViewModels();
-        builder.ConfigureAvalonia<App>(appBuilder => appBuilder.UsePlatformDetect().LogToTrace());
+
+        builder.ConfigureAvalonia<App>(appBuilder =>
+            appBuilder.UsePlatformDetect().UseR3().LogToTrace()
+        );
+        builder.ConfigureSingleInstance(mutexBuilder =>
+        {
+            const string id = "86246EE0-6591-4FD5-871C-3759C5E185FE";
+            const string pipeName = $"Rake.{id}.pipe";
+            mutexBuilder.MutexId = id;
+            mutexBuilder.WhenFirstInstance += async (sp, logger, token) =>
+            {
+                if (sp.GetRequiredService<SettingsService>().IsMultipleInstancesEnabled)
+                {
+                    return;
+                }
+
+                await using var server = new PipeServer<string>(
+                    pipeName,
+                    new SystemTextJsonNativeAotFormatter(GlobalJsonSerializerContext.Default)
+                );
+
+                server.MessageReceived += (_, message) =>
+                {
+                    if (message.Message is not "LOCKED")
+                        return;
+                    var mainWindow = Application.Current?.ApplicationLifetime?.TryGetMainWindow();
+                    if (mainWindow is null)
+                    {
+                        logger.LogWarning("Could not find main window");
+                        return;
+                    }
+
+                    Dispatcher.UIThread.Invoke(() =>
+                    {
+                        var initialState = mainWindow.WindowState;
+                        if (initialState is WindowState.Minimized)
+                        {
+                            initialState = WindowState.Normal;
+                        }
+
+                        mainWindow.WindowState = WindowState.Minimized;
+                        mainWindow.WindowState = initialState;
+                    });
+                };
+                logger.LogInformation("Starting pipe server");
+                await server.StartAsync(token).ConfigureAwait(false);
+                try
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.LogWarning("Shutting down pipe server");
+                }
+            };
+            mutexBuilder.WhenNotFirstInstance += async (sp, logger, token) =>
+            {
+                if (sp.GetRequiredService<SettingsService>().IsMultipleInstancesEnabled)
+                {
+                    return;
+                }
+
+                logger.LogWarning("Another instance is already running");
+                await using var client = new PipeClient<string>(
+                    pipeName,
+                    new SystemTextJsonNativeAotFormatter(GlobalJsonSerializerContext.Default)
+                );
+                await client.ConnectAsync(token).ConfigureAwait(false);
+                logger.LogWarning("Sending message");
+                await client.WriteAsync("LOCKED", token).ConfigureAwait(false);
+                logger.LogWarning("Sent message");
+                if (Application.Current?.ApplicationLifetime?.TryShutdown(2) is not true)
+                    Environment.Exit(2);
+            };
+        });
 
         var host = builder.Build();
+
         try
         {
             VelopackApp.Build().Run(host.Services.GetRequiredService<ILogger<VelopackApp>>());
-            await host.RunAsync();
+            host.Run();
         }
         catch (Exception ex)
         {
@@ -67,12 +155,13 @@ public static class Program
                     MESSAGEBOX_STYLE.MB_ICONERROR
                 );
             }
+
             throw;
         }
         finally
         {
             host.Dispose();
-            await Log.CloseAndFlushAsync();
+            Log.CloseAndFlush();
         }
     }
 
@@ -81,13 +170,16 @@ public static class Program
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure<Application>().UsePlatformDetect().LogToTrace();
 
-    private static void ConfigureLogging()
+    private static LoggingLevelSwitch ConfigureLogging()
     {
         const string logTemplate =
             "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {ClassName}] {Message:lj} {NewLine}{Exception}";
 
+        var loggingLevelSwitch = new LoggingLevelSwitch(
+            IsDebug ? LogEventLevel.Debug : LogEventLevel.Information
+        );
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Is(IsDebug ? LogEventLevel.Debug : LogEventLevel.Information)
+            .MinimumLevel.ControlledBy(loggingLevelSwitch)
             .Enrich.FromLogContext()
             .Enrich.WithClassName()
             .WriteTo.Console(outputTemplate: logTemplate)
@@ -102,6 +194,8 @@ public static class Program
                 }
             )
             .CreateLogger();
+
+        return loggingLevelSwitch;
     }
 
     public static bool IsDebug

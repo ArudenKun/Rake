@@ -15,7 +15,12 @@ public sealed class ViewLocator : IDataTemplate
 {
     private readonly Dictionary<Type, Func<Control>> _map = [];
 
-    public ViewLocator() => Register<MainWindow, MainWindowViewModel>();
+    public ViewLocator()
+    {
+        Register<MainWindow, MainWindowViewModel>();
+        Register<DashboardView, DashboardViewModel>();
+        Register<UpdateView, UpdateViewModel>();
+    }
 
     public void Register<TControl, TViewModel>()
         where TControl : Control, new()
@@ -30,14 +35,14 @@ public sealed class ViewLocator : IDataTemplate
                 Text = $"Could not find view for {viewModel.GetType().FullName}",
             };
         view.DataContext ??= viewModel;
-        BindEvents(viewModel, view);
+        BindEvents(view, viewModel);
         return view;
     }
 
     private Control? TryCreateView(ViewModelBase viewModel) =>
         _map.TryGetValue(viewModel.GetType(), out var factory) ? factory() : null;
 
-    private static void BindEvents(ViewModelBase viewModel, Control control)
+    public static void BindEvents(Control control, ViewModelBase viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(control);
