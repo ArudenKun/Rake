@@ -48,7 +48,7 @@ public sealed partial class MainWindowViewModel : AbstractViewModel
 
     private async Task CheckForUpdatesAsync()
     {
-        if (!_settingsService.IsAutoCheckForUpdatesEnabled)
+        if (!_settingsService.IsAutoCheckForUpdatesEnabled || !_updateService.IsInstalled)
         {
             return;
         }

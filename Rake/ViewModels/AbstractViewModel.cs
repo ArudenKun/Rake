@@ -22,8 +22,11 @@ namespace Rake.ViewModels;
 )]
 public abstract partial class AbstractViewModel : ObservableRecipient, IViewModel
 {
-    public ISukiDialogManager DialogManager { get; } = new SukiDialogManager();
-    public ISukiToastManager ToastManager { get; } = new SukiToastManager();
+    private static readonly Lazy<SukiDialogManager> LazySukiDialogManager = new();
+    private static readonly Lazy<SukiToastManager> LazySukiToastManager = new();
+
+    public ISukiDialogManager DialogManager => LazySukiDialogManager.Value;
+    public ISukiToastManager ToastManager => LazySukiToastManager.Value;
 
     [RelayCommand]
     private Task Loaded() => OnLoadedAsync();

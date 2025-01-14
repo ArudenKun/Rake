@@ -12,11 +12,13 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Quartz;
 using Rake.Core;
 using Rake.Core.Downloading;
 using Rake.Core.Helpers;
 using Rake.Extensions;
 using Rake.Hosting;
+using Rake.Jobs;
 using Rake.Services;
 using Serilog;
 using Serilog.Core;
@@ -58,9 +60,34 @@ public static class Program
             VelopackLocator.GetDefault(sp.GetRequiredService<ILogger<IVelopackLocator>>())
         );
         builder.Services.AddFactory(_ => Downloader.CreateInstance(HttpHelper.HttpClient));
+        builder.Services.AddHostedService<DatabaseMigrator>();
 
         // ViewModels
         builder.Services.AddViewModels();
+
+        builder.Services.AddQuartz(options =>
+        {
+            options.AddJob<DownloadVideoJob>(c =>
+                c.StoreDurably().WithIdentity(DownloadVideoJob.Name)
+            );
+
+            options.UsePersistentStore(storeOptions =>
+            {
+                storeOptions.UseMicrosoftSQLite(providerOptions =>
+                {
+                    var connectionString =
+                        $"Data Source={PathHelper.DataDirectory.Combine("data.db")}";
+                    providerOptions.ConnectionString = connectionString;
+                });
+                storeOptions.UseProperties = true;
+                storeOptions.UseSystemTextJsonSerializer();
+            });
+        });
+        builder.Services.AddQuartzHostedService(options =>
+        {
+            options.AwaitApplicationStarted = true;
+            options.WaitForJobsToComplete = true;
+        });
 
         builder.ConfigureAvalonia<App>(appBuilder =>
             appBuilder.UsePlatformDetect().UseR3().LogToTrace()
@@ -105,7 +132,7 @@ public static class Program
                         mainWindow.WindowState = initialState;
                     });
                 };
-                logger.LogInformation("Starting pipe server");
+                logger.LogDebug("Starting pipe server");
                 await server.StartAsync(token).ConfigureAwait(false);
                 try
                 {
@@ -113,7 +140,7 @@ public static class Program
                 }
                 catch (OperationCanceledException)
                 {
-                    logger.LogWarning("Shutting down pipe server");
+                    logger.LogDebug("Shutting down pipe server");
                 }
             };
             mutexBuilder.WhenNotFirstInstance += async (sp, logger, token) =>
@@ -123,15 +150,15 @@ public static class Program
                     return;
                 }
 
-                logger.LogWarning("Another instance is already running");
+                logger.LogInformation("Another instance is already running");
                 await using var client = new PipeClient<string>(
                     pipeName,
                     new SystemTextJsonNativeAotFormatter(GlobalJsonSerializerContext.Default)
                 );
                 await client.ConnectAsync(token).ConfigureAwait(false);
-                logger.LogWarning("Sending message");
+                logger.LogDebug("Sending message");
                 await client.WriteAsync("LOCKED", token).ConfigureAwait(false);
-                logger.LogWarning("Sent message");
+                logger.LogDebug("Sent message");
                 if (Application.Current?.ApplicationLifetime?.TryShutdown(2) is not true)
                     Environment.Exit(2);
             };

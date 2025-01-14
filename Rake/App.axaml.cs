@@ -6,7 +6,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using HotAvalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Rake.ViewModels;
 
@@ -16,14 +15,10 @@ public sealed class App : Application
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public App(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
+    public App(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
     public override void Initialize()
     {
-        this.EnableHotReload();
         AvaloniaXamlLoader.Load(this);
     }
 

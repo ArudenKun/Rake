@@ -68,6 +68,8 @@ public sealed class UpdateService
     /// </summary>
     public SemanticVersion NewVersion => UpdatePackage?.TargetFullRelease.Version ?? EmptyVersion;
 
+    public bool IsInstalled => UpdateManager.IsInstalled;
+
     public UpdateInfo? UpdatePackage { get; private set; }
 
     public async Task<UpdateInfo?> CheckForUpdatesAsync(bool ignoreCache = false)

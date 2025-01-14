@@ -9,12 +9,9 @@
         <PublishAot>true</PublishAot>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-        <DefineConstants>$(DefineConstants);ENABLE_XAML_HOT_RELOAD</DefineConstants>
-    </PropertyGroup>
-
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
+        <EmbeddedResource Include="Data\Scripts\**\*.sql" />
     </ItemGroup>
 
     <ItemGroup>
@@ -32,12 +29,16 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="dbup-sqlite" Version="6.0.1" />
         <PackageReference Include="H.Pipes" Version="15.0.0" />
         <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
         <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.13.1" />
+        <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.13.1" />
         <PackageReference Include="R3Extensions.Avalonia" Version="1.2.9" />
         <PackageReference Include="Serilog.Enrichers.ClassName" Version="0.3.0" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
@@ -47,22 +48,12 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Condition="$(DefineConstants.Contains(ENABLE_XAML_HOT_RELOAD))" Include="Avalonia.Markup.Xaml.Loader" Version="11.2.3" />
-        <PackageReference Condition="$(DefineConstants.Contains(ENABLE_XAML_HOT_RELOAD))" Include="HotAvalonia" Version="2.1.0" />
-        <PackageReference Include="HotAvalonia.Extensions" Version="2.1.0" PrivateAssets="All" />
         <PackageReference Include="SukiUI" Version="6.0.0-rc" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Rake.Core\Rake.Core.csproj" />
       <ProjectReference Include="..\Rake.Hosting\Rake.Hosting.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\Dialogs\UpdateView.axaml.cs">
-        <DependentUpon>UpdateView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
     </ItemGroup>
 
     <ItemGroup>
