@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <PublishAot>true</PublishAot>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,24 +17,22 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
+        <PackageReference Include="Avalonia" Version="11.2.3" />
         <PackageReference Include="Avalonia.Diagnostics" Version="11.2.3">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="CliWrap" Version="3.7.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-        <PackageReference Include="CSharpier.MsBuild" Version="0.30.6">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
         <PackageReference Include="dbup-sqlite" Version="6.0.1" />
+        <PackageReference Include="DebounceThrottle" Version="3.0.1" />
+        <PackageReference Include="Dommel" Version="3.3.4" />
+        <PackageReference Include="Flurl" Version="4.0.0" />
+        <PackageReference Include="Gress" Version="2.1.1" />
         <PackageReference Include="H.Pipes" Version="15.0.0" />
-        <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10" />
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
-        <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+        <PackageReference Include="Humanizer" Version="2.14.1" />
+        <PackageReference Include="Material.Icons.Avalonia" Version="2.1.11" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.1" />
         <PackageReference Include="Quartz.Extensions.Hosting" Version="3.13.1" />
         <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.13.1" />
         <PackageReference Include="R3Extensions.Avalonia" Version="1.2.9" />
@@ -49,10 +45,11 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="SukiUI" Version="6.0.0-rc" />
+        <PackageReference Include="Velopack" Version="0.0.1053" />
+        <PackageReference Include="WebView.Avalonia.Cross" Version="11.2.3" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Rake.Core\Rake.Core.csproj" />
       <ProjectReference Include="..\Rake.Hosting\Rake.Hosting.csproj" />
     </ItemGroup>
 

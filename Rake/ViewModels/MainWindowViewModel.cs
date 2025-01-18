@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Humanizer;
 using Microsoft.Extensions.Logging;
+using R3;
 using Rake.Extensions;
 using Rake.Services;
 using SukiUI.Dialogs;
@@ -16,6 +18,9 @@ public sealed partial class MainWindowViewModel : AbstractViewModel
     private readonly SettingsService _settingsService;
     private readonly ViewModelFactory _viewModelFactory;
 
+    [ObservableProperty]
+    private string _url = "https://www.youtube.com";
+
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
         UpdateService updateService,
@@ -27,11 +32,19 @@ public sealed partial class MainWindowViewModel : AbstractViewModel
         _updateService = updateService;
         _settingsService = settingsService;
         _viewModelFactory = viewModelFactory;
+
+        Observable
+            .EveryValueChanged(this, x => x.Url)
+            .Debounce(1.Seconds())
+            .Subscribe(s =>
+            {
+                logger.LogInformation(s);
+            })
+            .AddTo(this);
     }
 
     protected override async Task OnLoadedAsync()
     {
-        _settingsService.Load();
         await CheckForUpdatesAsync();
     }
 

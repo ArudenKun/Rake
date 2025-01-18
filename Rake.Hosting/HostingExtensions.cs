@@ -8,7 +8,7 @@ using Rake.Hosting.Mutex;
 namespace Rake.Hosting;
 
 /// <summary>
-/// Contains helper extensions for <see cref="HostApplicationBuilder" /> to
+/// Contains helper extensions for <see cref="IHostApplicationBuilder" /> to
 /// configure the WinUI service hosting.
 /// </summary>
 public static class HostingExtensions
@@ -54,25 +54,20 @@ public static class HostingExtensions
     /// <exception cref="ArgumentException">
     /// When the application's type does not extend <see cref="Application" />.
     /// </exception>
-    public static HostApplicationBuilder ConfigureAvalonia<
+    public static IHostApplicationBuilder ConfigureAvalonia<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TApplication
-    >(this HostApplicationBuilder hostBuilder, Action<AppBuilder> appBuilderConfiguration)
+    >(this IHostApplicationBuilder hostBuilder, Action<AppBuilder> appBuilderConfiguration)
         where TApplication : Application
     {
         HostingContext context;
-        if (
-            ((IHostApplicationBuilder)hostBuilder).Properties.TryGetValue(
-                HostingContextKey,
-                out var contextAsObject
-            )
-        )
+        if (hostBuilder.Properties.TryGetValue(HostingContextKey, out var contextAsObject))
         {
             context = (HostingContext)contextAsObject;
         }
         else
         {
             context = new HostingContext { IsLifetimeLinked = true };
-            ((IHostApplicationBuilder)hostBuilder).Properties[HostingContextKey] = context;
+            hostBuilder.Properties[HostingContextKey] = context;
         }
 
         _ = hostBuilder.Services.AddSingleton(context);
@@ -105,18 +100,13 @@ public static class HostingExtensions
     /// </summary>
     /// <param name="hostBuilder">IHostBuilder</param>
     /// <param name="configureAction">Action to configure IMutexBuilder</param>
-    /// <returns>HostApplicationBuilder</returns>
-    public static HostApplicationBuilder ConfigureSingleInstance(
-        this HostApplicationBuilder hostBuilder,
+    /// <returns>IHostApplicationBuilder</returns>
+    public static IHostApplicationBuilder ConfigureSingleInstance(
+        this IHostApplicationBuilder hostBuilder,
         Action<IMutexBuilder>? configureAction = null
     )
     {
-        if (
-            !TryRetrieveMutexBuilder(
-                ((IHostApplicationBuilder)hostBuilder).Properties,
-                out var mutexBuilder
-            )
-        )
+        if (!TryRetrieveMutexBuilder(hostBuilder.Properties, out var mutexBuilder))
         {
             hostBuilder
                 .Services.AddSingleton(mutexBuilder)
@@ -132,9 +122,9 @@ public static class HostingExtensions
     /// </summary>
     /// <param name="hostBuilder">IHostBuilder</param>
     /// <param name="mutexId">string</param>
-    /// <returns>HostApplicationBuilder</returns>
-    public static HostApplicationBuilder ConfigureSingleInstance(
-        this HostApplicationBuilder hostBuilder,
+    /// <returns>IHostApplicationBuilder</returns>
+    public static IHostApplicationBuilder ConfigureSingleInstance(
+        this IHostApplicationBuilder hostBuilder,
         string mutexId
     ) => hostBuilder.ConfigureSingleInstance(builder => builder.MutexId = mutexId);
 

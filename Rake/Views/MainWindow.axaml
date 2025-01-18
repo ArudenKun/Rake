@@ -20,13 +20,16 @@
         <suki:SukiToastHost Manager="{Binding ToastManager}" />
     </suki:SukiWindow.Hosts>
 
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-        <!-- <TextBlock Text="{Binding}" /> -->
-        <!-- <TextBlock Text="{Binding}" /> -->
-        <TextBlock Text="Test" />
-        <TextBlock Text="Test1" />
-        <Button Command="{Binding ShowUpdateDialogCommand}" Content="Show Update" />
-    </StackPanel>
+    <!-- <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"> -->
+    <!--     ~1~ <TextBlock Text="{Binding}" /> @1@ -->
+    <!--     ~1~ <TextBlock Text="{Binding}" /> @1@ -->
+    <!--     ~1~ <Button Command="{Binding ShowUpdateDialogCommand}" Content="Show Update" /> @1@ -->
+    <!--     <WebView Name="WebView" Url="https://www.youtube.com" /> -->
+    <!-- </StackPanel> -->
+
+    <Panel>
+        <WebView Url="{Binding Url}" />
+    </Panel>
 
     <!-- <TransitioningContentControl Content="{Binding CurrentViewModel}"> -->
     <!--     <TransitioningContentControl.PageTransition> -->

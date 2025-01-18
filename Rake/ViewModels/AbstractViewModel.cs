@@ -20,7 +20,8 @@ namespace Rake.ViewModels;
         typeof(INotifyPropertyChanging),
     ]
 )]
-public abstract partial class AbstractViewModel : ObservableRecipient, IViewModel
+[ObservableRecipient]
+public abstract partial class AbstractViewModel : ObservableValidator, IViewModel
 {
     private static readonly Lazy<SukiDialogManager> LazySukiDialogManager = new();
     private static readonly Lazy<SukiToastManager> LazySukiToastManager = new();
@@ -68,9 +69,13 @@ public abstract partial class AbstractViewModel : ObservableRecipient, IViewMode
     protected static async Task<TResult> DispatchAsync<TResult>(Func<TResult> action) =>
         await Dispatcher.UIThread.InvokeAsync(action);
 
+    protected void OnAllPropertiesChanged() => OnPropertyChanged(string.Empty);
+
     ~AbstractViewModel() => Dispose(false);
 
-    protected void OnAllPropertiesChanged() => OnPropertyChanged(string.Empty);
+    private Action? _onDisposeAction;
+
+    public void OnDispose(Action action) => _onDisposeAction = action;
 
     /// <inheritdoc cref="Dispose"/>>
     protected virtual void Dispose(bool disposing) { }
@@ -79,6 +84,7 @@ public abstract partial class AbstractViewModel : ObservableRecipient, IViewMode
     public void Dispose()
     {
         Dispose(true);
+        _onDisposeAction?.Invoke();
         GC.SuppressFinalize(this);
     }
 }

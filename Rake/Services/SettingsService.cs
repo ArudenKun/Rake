@@ -1,19 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
+using Rake.Converters;
 using Rake.Core;
-using Rake.Core.Converters;
-using Rake.Core.Helpers;
+using Rake.Helpers;
 using Rake.Models;
+using Rake.Utilities;
 
 namespace Rake.Services;
 
 [INotifyPropertyChanged]
 [PublicAPI]
-public sealed partial class SettingsService : AbstractJsonPersistence
+public sealed partial class SettingsService : AbstractJsonPersistence, IDisposable
 {
     private readonly ILogger<SettingsService> _logger;
 
@@ -43,7 +45,7 @@ public sealed partial class SettingsService : AbstractJsonPersistence
         set => SetProperty(ref _updateChannel, value);
     }
 
-    [JsonConverter(typeof(SemanticVersionHashSetJsonConverter))]
+    [JsonConverter(typeof(HastSetJsonConverter<SemanticVersion, SemanticVersionJsonConverter>))]
     public HashSet<SemanticVersion> VersionsToSkip
     {
         get => _versionsToSkip;
@@ -67,4 +69,6 @@ public sealed partial class SettingsService : AbstractJsonPersistence
         get => _theme;
         set => SetProperty(ref _theme, value);
     }
+
+    public void Dispose() => Save();
 }

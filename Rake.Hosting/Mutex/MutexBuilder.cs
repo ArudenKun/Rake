@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Rake.Hosting.Abstractions;
 
 namespace Rake.Hosting.Mutex;

@@ -71,7 +71,7 @@ public sealed class UserInterfaceThread(
         try
         {
             var appBuilder = serviceProvider.GetRequiredService<AppBuilder>();
-            appBuilder.UsePlatformDetect().StartWithClassicDesktopLifetime([]);
+            appBuilder.StartWithClassicDesktopLifetime([]);
             HostingContext.Dispatcher = Dispatcher.UIThread;
             var context = new AvaloniaSynchronizationContext(
                 HostingContext.Dispatcher,

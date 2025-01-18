@@ -6,7 +6,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using AvaloniaWebView;
 using Microsoft.Extensions.DependencyInjection;
+using Rake.Helpers;
 using Rake.ViewModels;
 
 namespace Rake;
@@ -20,6 +22,9 @@ public sealed class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        AvaloniaWebViewBuilder.Initialize(options =>
+            options.UserDataFolder = PathHelper.DataDirectory.Combine("webview")
+        );
     }
 
     [RequiresUnreferencedCode("Calls Avalonia.Data.Core.Plugins.BindingPlugins.DataValidators")]
