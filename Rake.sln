@@ -1,23 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rake", "Rake\Rake.csproj", "{B63277CC-870E-4274-BD29-51F961D1330B}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{CD90D88E-863A-4E4C-8B5D-5E16A38FBC58}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rake.Hosting", "Rake.Hosting\Rake.Hosting.csproj", "{58B505E0-FE6F-4E03-95F0-37B5FBA9C44C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{7B5D0682-8F83-43E9-ABD6-BAC0ED70CA84}"
-	ProjectSection(SolutionItems) = preProject
-		Platforms\Directory.Build.props = Platforms\Directory.Build.props
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rake.Windows", "Platforms\Rake.Windows\Rake.Windows.csproj", "{6F29C22A-13B1-4755-981D-3C11D0508864}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rake.Linux", "Platforms\Rake.Linux\Rake.Linux.csproj", "{81887EF8-450D-4B78-B9FB-4FA3B72EE402}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,25 +12,7 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B63277CC-870E-4274-BD29-51F961D1330B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B63277CC-870E-4274-BD29-51F961D1330B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B63277CC-870E-4274-BD29-51F961D1330B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B63277CC-870E-4274-BD29-51F961D1330B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{58B505E0-FE6F-4E03-95F0-37B5FBA9C44C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58B505E0-FE6F-4E03-95F0-37B5FBA9C44C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58B505E0-FE6F-4E03-95F0-37B5FBA9C44C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{58B505E0-FE6F-4E03-95F0-37B5FBA9C44C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F29C22A-13B1-4755-981D-3C11D0508864}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F29C22A-13B1-4755-981D-3C11D0508864}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F29C22A-13B1-4755-981D-3C11D0508864}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F29C22A-13B1-4755-981D-3C11D0508864}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81887EF8-450D-4B78-B9FB-4FA3B72EE402}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81887EF8-450D-4B78-B9FB-4FA3B72EE402}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81887EF8-450D-4B78-B9FB-4FA3B72EE402}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81887EF8-450D-4B78-B9FB-4FA3B72EE402}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{6F29C22A-13B1-4755-981D-3C11D0508864} = {7B5D0682-8F83-43E9-ABD6-BAC0ED70CA84}
-		{81887EF8-450D-4B78-B9FB-4FA3B72EE402} = {7B5D0682-8F83-43E9-ABD6-BAC0ED70CA84}
 	EndGlobalSection
 EndGlobal
