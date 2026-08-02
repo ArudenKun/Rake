@@ -1,0 +1,85 @@
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Rake.Configuration.Writable.Configure;
+using Rake.Configuration.Writable.FileProvider;
+using Rake.Configuration.Writable.FormatProvider;
+using Rake.Configuration.Writable.Migration;
+
+namespace Rake.Configuration.Writable.Options;
+
+/// <summary>
+/// Options for initializing writable configuration.
+/// </summary>
+/// <typeparam name="T">The type of the configuration class.</typeparam>
+public record WritableOptionsConfiguration<T> : IWritableOptionsConfiguration
+    where T : class, new()
+{
+    internal WritableOptionsConfiguration() { }
+
+    /// <summary>
+    /// Gets or sets a instance of <see cref="IWritableFormatProvider"/> used to handle the serialization and deserialization of the configuration data.<br/>
+    /// Defaults to <see cref="JsonFormatProvider"/> which uses JSON format. <br/>
+    /// </summary>
+    public required FormatProvider.IWritableFormatProvider FormatProvider { get; init; }
+
+    /// <summary>
+    /// Gets or sets a instance of <see cref="IWritableFileProvider"/> used to handle the file writing operations.
+    /// </summary>
+    public required IWritableFileProvider FileProvider { get; init; }
+
+    /// <summary>
+    /// Gets the full file path to the configuration file, combining config folder and file name.
+    /// </summary>
+    public required string ConfigFilePath { get; init; }
+
+    /// <summary>
+    /// Gets or sets the name of the configuration instance. Defaults to Options.DefaultName ("").
+    /// </summary>
+    public required string InstanceName { get; init; }
+
+    /// <summary>
+    /// Gets the parts of the section name split by ':' and '__' for hierarchical navigation.
+    /// If empty, that means the root of the configuration file.
+    /// </summary>
+    public required List<string> SectionNameParts { get; init; }
+
+    /// <summary>
+    /// Gets the debounce duration for change events.
+    /// This delays event firing until rapid changes have stopped.
+    /// </summary>
+    public required TimeSpan OnChangeDebounce { get; init; }
+
+    /// <summary>
+    /// Gets how saves handle changes made to the configuration file after it was loaded.
+    /// </summary>
+    public ConfigurationConflictResolution ConflictResolution { get; init; } =
+        ConfigurationConflictResolution.FailOnConflict;
+
+    /// <summary>
+    /// Gets or sets the cloning strategy function to create deep copies of the configuration object.
+    /// </summary>
+    public required Func<T, T> CloneMethod { get; init; }
+
+    /// <summary>
+    /// Gets or sets the logger for configuration operations.
+    /// If null, logging is disabled. Defaults to null.
+    /// </summary>
+    public ILogger? Logger { get; init; }
+
+    /// <summary>
+    /// Gets or sets the validation function to be executed before saving configuration.
+    /// If null, no validation is performed. Defaults to null.
+    /// </summary>
+    public Func<T, ValidateOptionsResult>? Validator { get; init; }
+
+    /// <summary>
+    /// Gets the list of migration steps to apply when loading configuration from older versions.
+    /// The migrations are applied in the order they are defined (e.g., V1 -> V2 -> V3).
+    /// </summary>
+    internal List<MigrationStep> MigrationSteps { get; init; } = [];
+
+    /// <summary>
+    /// Gets the migration lookups computed when these options were built.
+    /// </summary>
+    internal MigrationLookup? MigrationLookup { get; init; }
+}

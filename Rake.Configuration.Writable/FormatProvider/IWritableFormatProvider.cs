@@ -1,0 +1,53 @@
+﻿using System.IO.Pipelines;
+using Rake.Configuration.Writable.Configure;
+
+namespace Rake.Configuration.Writable.FormatProvider;
+
+/// <summary>
+/// Defines a provider for managing writable configurations, including serialization and deserialization of configuration objects.
+/// </summary>
+public interface IWritableFormatProvider
+{
+    /// <summary>
+    /// Gets the file extension associated with the current file, excluding the leading period (e.g., "txt").
+    /// </summary>
+    string FileExtension { get; }
+
+    /// <summary>
+    /// Loads configuration from a file and deserializes it to the specified type.
+    /// </summary>
+    /// <param name="type">The type of the configuration object to load.</param>
+    /// <param name="options">The options that control how the configuration is loaded.</param>
+    /// <returns>The deserialized configuration object.</returns>
+    object LoadConfiguration(Type type, IWritableOptionsConfiguration options);
+
+    /// <summary>
+    /// Loads configuration from a PipeReader and deserializes it to the specified type.
+    /// </summary>
+    /// <param name="type">The type of the configuration object to load.</param>
+    /// <param name="reader">The PipeReader containing the configuration data.</param>
+    /// <param name="sectionNameParts">The parts of the section name split by ':' and '__' for hierarchical navigation.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the load operation.</param>
+    /// <returns>The deserialized configuration object.</returns>
+    ValueTask<object> LoadConfigurationAsync(
+        Type type,
+        PipeReader reader,
+        System.Collections.Generic.List<string> sectionNameParts,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Asynchronously saves the specified configuration object to a file.
+    /// </summary>
+    /// <typeparam name="T">The type of the configuration object to save. Must be a reference type.</typeparam>
+    /// <param name="config">The configuration object to be saved.</param>
+    /// <param name="options">The options that control how and where the configuration is saved, including the target file path.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the save operation.</param>
+    /// <returns>A task that represents the asynchronous save operation.</returns>
+    Task SaveAsync<T>(
+        T config,
+        IWritableOptionsConfiguration options,
+        CancellationToken cancellationToken = default
+    )
+        where T : class, new();
+}

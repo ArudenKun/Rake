@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/libs/">
+    <Project Path="Rake.Configuration.Writable.Generator/Rake.Configuration.Writable.Generator.csproj" />
+    <Project Path="Rake.Configuration.Writable/Rake.Configuration.Writable.csproj" />
+  </Folder>
+  <Project Path="Rake.Core/Rake.Core.csproj" />
+  <Project Path="Rake.Hosting/Rake.Hosting.csproj" />
+  <Project Path="Rake.SourceGenerators/Rake.SourceGenerators.csproj" />
+  <Project Path="Rake/Rake.csproj" />
+</Solution>
