@@ -31,9 +31,6 @@ public partial class ToolsService : IToolsService
     [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
     private static partial Regex Aria2VersionRegex();
 
-    [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
-    private static partial Regex QuickJsVersionRegex();
-
     public ToolsService(
         IOptions<RakeCoreOptions> options,
         HttpClient httpClient,
@@ -193,7 +190,6 @@ public partial class ToolsService : IToolsService
         {
             case Tool.YtDlp:
             case Tool.Aria2:
-            case Tool.QuickJs:
                 await DownloadFileAsync(downloadUrl, destinationPath, progress, cancellationToken);
                 break;
 
@@ -257,7 +253,6 @@ public partial class ToolsService : IToolsService
             Tool.YtDlp => YtDlpVersionRegex().Match(firstLine).Value,
             Tool.FFmpeg => MatchFFmpegVersion(firstLine),
             Tool.Aria2 => Aria2VersionRegex().Match(firstLine).Value,
-            Tool.QuickJs => QuickJsVersionRegex().Match(firstLine).Value,
             _ => firstLine.Trim(),
         };
     }
@@ -391,7 +386,6 @@ public partial class ToolsService : IToolsService
                 ? "https://github.com/Tyrrrz/FFmpegBin/releases/latest/download/ffmpeg-osx-x64.zip"
             : "https://github.com/Tyrrrz/FFmpegBin/releases/latest/download/ffmpeg-linux-x64.zip",
             Tool.Aria2 => await GetAria2NextLatestDownloadUrlAsync(cancellationToken),
-            Tool.QuickJs => GetQuickJsDownloadUrl(),
             _ => throw new NotSupportedException($"No download URL configured for '{tool}'."),
         };
 
@@ -453,7 +447,11 @@ public partial class ToolsService : IToolsService
 
         var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
 
-        var archKeyword = isArm64 ? (OperatingSystem.IsLinux() ? "aarch64" : "arm64") : "x86_64";
+        var archKeyword = isArm64
+            ? OperatingSystem.IsLinux()
+                ? "aarch64"
+                : "arm64"
+            : "x86_64";
 
         if (
             json.RootElement.TryGetProperty("assets", out var assets)
@@ -484,30 +482,6 @@ public partial class ToolsService : IToolsService
         );
     }
 
-    private static string GetQuickJsDownloadUrl()
-    {
-        var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
-
-        if (OperatingSystem.IsWindows())
-        {
-            // qjs-windows-x86_64.exe or qjs-windows-x86.exe
-            return "https://github.com/quickjs-ng/quickjs/releases/latest/download/qjs-windows-x86_64.exe";
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            // qjs-darwin-arm64 or qjs-darwin-x86_64
-            return isArm64
-                ? "https://github.com/quickjs-ng/quickjs/releases/latest/download/qjs-darwin-arm64"
-                : "https://github.com/quickjs-ng/quickjs/releases/latest/download/qjs-darwin-x86_64";
-        }
-
-        // Linux
-        return isArm64
-            ? "https://github.com/quickjs-ng/quickjs/releases/latest/download/qjs-linux-aarch64"
-            : "https://github.com/quickjs-ng/quickjs/releases/latest/download/qjs-linux-x86_64";
-    }
-
     #endregion
 
     public static string GetBinaryName(Tool tool)
@@ -529,7 +503,6 @@ public partial class ToolsService : IToolsService
             : isMac ? "yt-dlp_macos"
             : "yt-dlp",
             Tool.Aria2 => isWindows ? "aria2c.exe" : "aria2c",
-            Tool.QuickJs => isWindows ? "qjs.exe" : "qjs",
             _ => string.Empty,
         };
     }

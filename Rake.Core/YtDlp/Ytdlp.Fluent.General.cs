@@ -84,6 +84,11 @@ public sealed partial class YtDlp
         return AddOption("--js-runtime", builder);
     }
 
+    public YtDlp WithJsRuntime(Runtime runtime)
+    {
+        return AddOption("--js-runtime", runtime.ToString().ToLowerInvariant());
+    }
+
     /// <summary>
     /// Clear JavaScript runtimes to enable, including defaults and those provided by <see cref="WithJsRuntime(Runtime, string)"/>
     /// </summary>

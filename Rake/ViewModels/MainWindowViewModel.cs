@@ -1,4 +1,6 @@
 using System;
+using System.Buffers;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -59,7 +61,6 @@ public partial class MainWindowViewModel : ViewModel
             .WithMkvOutput()
             .WithAria2()
             .WithOutputTemplate("%(upload_date>%Y-%m-%d)s - %(title).90s [%(resolution)s].%(ext)s")
-            .WithTempFolder(RakeDirectoryConsts.Tools.CombinePath("temp"))
             .WithOutputFolder(RakeDirectoryConsts.Tools);
 
         var ytDlpEvents = ytDlp.Events();
@@ -72,18 +73,21 @@ public partial class MainWindowViewModel : ViewModel
         var formats = getFormatsTask.Result;
 
         DownloadProgressState lastState = default;
+
+        var title = metadata?.Title ?? "Unknown";
         var downloadProgress = new Progress<DownloadProgressState>(state =>
         {
-            var sb = new StringBuilder();
-
-            sb.AppendLine($"Title: {metadata?.Title ?? "Unknown"}");
-            sb.AppendLine($"ETA: {state.Eta}");
-            sb.AppendLine($"Size: {state.Size}");
-            sb.AppendLine($"Speed: {state.Speed}");
-            sb.AppendLine($"Fragments, {state.Fragments}");
-            sb.AppendLine($"Progress: {state.Progress.Fraction:P}");
-
-            Greeting = sb.ToString();
+            Greeting = string.Create(
+                CultureInfo.InvariantCulture,
+                $"""
+                Title: {title}
+                ETA: {state.Eta}
+                Size: {state.Size}
+                Speed: {state.Speed}
+                Fragments: {state.Fragments}
+                Progress: {state.Progress.Fraction:P1}
+                """
+            );
         }).WithDeduplication().WithOrdering();
 
         var bag = new DisposableBag();
