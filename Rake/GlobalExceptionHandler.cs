@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using R3;
 using R3.ObservableEvents;
+using Rake.ViewModels;
 using SukiUI.Controls;
 
 namespace Rake;
@@ -58,6 +59,9 @@ public static class GlobalExceptionHandler
 
     static void OnUnobservedTask(object? sender, UnobservedTaskExceptionEventArgs e)
     {
+        if (sender is ViewModel)
+            return;
+
         e.SetObserved();
         // The Linux DBus failures arrive here: a fire-and-forget Tmds.DBus call faults and the
         // AggregateException is rethrown by the finalizer. Log the unwrapped chain plus the

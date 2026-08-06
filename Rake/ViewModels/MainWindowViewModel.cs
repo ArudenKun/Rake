@@ -1,32 +1,28 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Gress;
 using Microsoft.Extensions.Logging;
-using Rake.Core.Tools.FFmpeg;
-using Rake.Core.Tools.HandBrake;
-using Rake.Core.Tools.YtDlp;
+using R3;
+using R3.ObservableEvents;
+using Rake.Core;
+using Rake.Core.Extensions;
+using Rake.Core.YtDlp;
 
 namespace Rake.ViewModels;
 
 public partial class MainWindowViewModel : ViewModel
 {
-    public MainWindowViewModel(
-        IFFmpegToolsService fFmpegToolService,
-        IYtDlpToolsService ytDlpToolService,
-        IHandBrakeToolsService handBrakeToolService
-    )
+    public MainWindowViewModel(IToolsService toolsService)
     {
-        FFmpegToolService = fFmpegToolService;
-        YtDlpToolService = ytDlpToolService;
-        HandBrakeToolService = handBrakeToolService;
+        ToolsService = toolsService;
     }
 
-    protected IFFmpegToolsService FFmpegToolService { get; }
-    protected IYtDlpToolsService YtDlpToolService { get; }
-    protected IHandBrakeToolsService HandBrakeToolService { get; }
+    protected IToolsService ToolsService { get; }
 
     [ObservableProperty]
     public partial string Greeting { get; set; } = "Welcome to Avalonia!";
@@ -34,37 +30,100 @@ public partial class MainWindowViewModel : ViewModel
     [RelayCommand]
     private async Task ShowExceptionAsync(CancellationToken cancellationToken)
     {
-        Logger.LogInformation("HandBrake Path: {Path}", RakePathConsts.HandBrake);
+        Logger.LogInformation("QuickJs Path: {Path}", RakePathConsts.QuickJs);
         Logger.LogInformation("FFmpeg Path: {Path}", RakePathConsts.FFmpeg);
         Logger.LogInformation("yt-dlp Path: {Path}", RakePathConsts.YtDlp);
-        var isHandBraleAvailable = HandBrakeToolService.IsAvailable(RakePathConsts.HandBrake);
-        var isFFmpegAvailable = FFmpegToolService.IsAvailable(RakePathConsts.FFmpeg);
-        var isYtDlpAvailable = HandBrakeToolService.IsAvailable(RakePathConsts.YtDlp);
+        Logger.LogInformation("Aria2 Path: {Path}", RakePathConsts.Aria2);
 
-        var handBrakeVersionTask = HandBrakeToolService.GetVersionAsync(
-            RakePathConsts.HandBrake,
-            cancellationToken
-        );
-        var ffmpegVersionTask = FFmpegToolService.GetVersionAsync(
-            RakePathConsts.FFmpeg,
-            cancellationToken
-        );
-        var ytDlpVersionTask = YtDlpToolService.GetVersionAsync(
-            RakePathConsts.YtDlp,
-            cancellationToken
-        );
+        foreach (var tool in Enum.GetValues<Tool>().Where(tool => tool is not Tool.Deno))
+        {
+            if (ToolsService.IsLocalAvailable(tool))
+                continue;
 
-        await Task.WhenAll(handBrakeVersionTask, ffmpegVersionTask, ytDlpVersionTask);
+            var progress = new Progress<Percentage>(p =>
+                Greeting = $"{tool} Progress: {p.Fraction:P}"
+            );
 
-        var sb = new StringBuilder();
-        sb.AppendLine($"HandBrake Version: {handBrakeVersionTask.Result}");
-        sb.AppendLine($"FFmpeg Version: {ffmpegVersionTask.Result}");
-        sb.AppendLine($"YtDlp Version: {ytDlpVersionTask.Result}");
-        sb.AppendLine("---------");
-        sb.AppendLine($"HandBrake Version: {new Version(handBrakeVersionTask.Result)}");
-        sb.AppendLine($"FFmpeg Version: {new Version(ffmpegVersionTask.Result)}");
-        sb.AppendLine($"YtDlp Version: {new Version(ytDlpVersionTask.Result)}");
+            await ToolsService.DownloadAsync(tool, progress, cancellationToken);
 
-        Greeting = sb.ToString();
+            var version = await ToolsService.GetVersionAsync(tool, cancellationToken);
+            Greeting = $"Finished Download {tool} {version}";
+        }
+
+        var url = "https://www.youtube.com/watch?v=8j4EgU75tJ8";
+        var ytDlp = new YtDlp(RakePathConsts.YtDlp, LoggerFactory.CreateLogger<YtDlp>())
+            .WithDefaults()
+            .WithBestVideoPlusBestAudio()
+            .WithConcurrentFragments()
+            .WithWindowsFilenames()
+            .WithMkvOutput()
+            .WithAria2()
+            .WithOutputTemplate("%(upload_date>%Y-%m-%d)s - %(title).90s [%(resolution)s].%(ext)s")
+            .WithTempFolder(RakeDirectoryConsts.Tools.CombinePath("temp"))
+            .WithOutputFolder(RakeDirectoryConsts.Tools);
+
+        var ytDlpEvents = ytDlp.Events();
+        var getMetadataTasks = ytDlp.GetMetadataAsync(url, cancellationToken);
+        var getFormatsTask = ytDlp.GetFormatsAsync(url, cancellationToken);
+
+        await Task.WhenAll(getMetadataTasks, getFormatsTask);
+
+        var metadata = getMetadataTasks.Result;
+        var formats = getFormatsTask.Result;
+
+        DownloadProgressState lastState = default;
+        var downloadProgress = new Progress<DownloadProgressState>(state =>
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"Title: {metadata?.Title ?? "Unknown"}");
+            sb.AppendLine($"ETA: {state.Eta}");
+            sb.AppendLine($"Size: {state.Size}");
+            sb.AppendLine($"Speed: {state.Speed}");
+            sb.AppendLine($"Fragments, {state.Fragments}");
+            sb.AppendLine($"Progress: {state.Progress.Fraction:P}");
+
+            Greeting = sb.ToString();
+        }).WithDeduplication().WithOrdering();
+
+        var bag = new DisposableBag();
+        ytDlpEvents
+            .ProgressDownload.ObserveOnUIThreadDispatcher()
+            .Subscribe(args =>
+            {
+                var percentage = Percentage.FromValue(args.Percent);
+                lastState = new DownloadProgressState(
+                    percentage,
+                    args.ETA,
+                    args.Size,
+                    args.Speed,
+                    args.Fragments
+                );
+                downloadProgress.Report(lastState);
+            })
+            .AddTo(ref bag);
+
+        try
+        {
+            await ytDlp.DownloadAsync(url, cancellationToken);
+            var finalState = lastState with { Progress = Percentage.FromFraction(1.0) };
+            downloadProgress.Report(finalState);
+        }
+        finally
+        {
+            bag.Dispose();
+        }
+    }
+
+    public readonly record struct DownloadProgressState(
+        Percentage Progress,
+        string Eta,
+        string Size,
+        string Speed,
+        string Fragments
+    ) : IComparable<DownloadProgressState>
+    {
+        public int CompareTo(DownloadProgressState other) =>
+            Progress.Fraction.CompareTo(other.Progress.Fraction);
     }
 }

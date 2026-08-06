@@ -43,6 +43,11 @@ public partial class RakeModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        Configure<RakeCoreOptions>(options =>
+        {
+            options.ToolsDirectory = RakeDirectoryConsts.Tools;
+        });
+
         ConfigureNavigation(context.Services);
         ConfigureVirtualFileSystem(context);
     }
@@ -81,6 +86,10 @@ public partial class RakeModule : AbpModule
 
     [ScanForTypes(
         AssignableTo = typeof(Window<>),
+        Handler = nameof(RegisterViewsAndViewModelsHandler)
+    )]
+    [ScanForTypes(
+        AssignableTo = typeof(SukiWindow<>),
         Handler = nameof(RegisterViewsAndViewModelsHandler)
     )]
     [ScanForTypes(

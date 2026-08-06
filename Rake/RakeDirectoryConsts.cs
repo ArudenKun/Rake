@@ -9,6 +9,11 @@ public static class RakeDirectoryConsts
 {
     public static readonly string App = AppContext.BaseDirectory;
 
+    public static readonly string Download = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        "Downloads"
+    );
+
     public static readonly string Local = Environment.GetFolderPath(
         Environment.SpecialFolder.LocalApplicationData
     );
