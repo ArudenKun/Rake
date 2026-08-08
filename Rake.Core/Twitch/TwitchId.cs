@@ -4,15 +4,57 @@ using PowerKit.Extensions;
 
 namespace Rake.Core.Twitch;
 
-public readonly struct TwitchId(string value) : IEquatable<TwitchId>
+public readonly partial struct TwitchId(string value) : IEquatable<TwitchId>
 {
     /// <summary>
     /// Raw ID value.
     /// </summary>
     public string Value { get; } = value;
 
+    /// <summary>
+    /// Indicates whether this ID refers to a Twitch VOD (Video).
+    /// </summary>
+    public bool IsVideo => ValidateIsVideo(Value);
+
+    /// <summary>
+    /// Indicates whether this ID refers to a Twitch Clip.
+    /// </summary>
+    public bool IsClip => ValidateIsClip(Value);
+
     /// <inheritdoc />
     public override string ToString() => Value;
+
+    /// <summary>
+    /// Checks if the specified string is a Twitch VOD ID or URL.
+    /// </summary>
+    public static bool ValidateIsVideo(string? videoIdOrUrl)
+    {
+        if (string.IsNullOrWhiteSpace(videoIdOrUrl))
+            return false;
+
+        if (VideoUrlRegex().IsMatch(videoIdOrUrl))
+            return true;
+
+        var normalized = TryNormalize(videoIdOrUrl);
+        return normalized != null && normalized.All(char.IsDigit);
+    }
+
+    /// <summary>
+    /// Checks if the specified string is a Twitch Clip ID or URL.
+    /// </summary>
+    public static bool ValidateIsClip(string? videoIdOrUrl)
+    {
+        if (string.IsNullOrWhiteSpace(videoIdOrUrl))
+            return false;
+
+        if (
+            ShortClipUrlRegex().IsMatch(videoIdOrUrl) || ChannelClipUrlRegex().IsMatch(videoIdOrUrl)
+        )
+            return true;
+
+        var normalized = TryNormalize(videoIdOrUrl);
+        return normalized != null && !normalized.All(char.IsDigit);
+    }
 
     /// <summary>
     /// Validates numeric VOD IDs (e.g., 123456789) or alphanumeric Clip IDs/slugs (e.g., EnergeticSnappyPanda-abc123_XYZ).
@@ -34,20 +76,29 @@ public readonly struct TwitchId(string value) : IEquatable<TwitchId>
         return
             // VOD URL
             // https://www.twitch.tv/videos/1234567890
-            TryExtractId(videoIdOrUrl, @"twitch\.tv/videos/(\d+)")
+            TryExtractId(videoIdOrUrl, VideoUrlRegex())
             // Short Clip URL
             // https://clips.twitch.tv/EnergeticSnappyPanda-abc123
-            ?? TryExtractId(videoIdOrUrl, @"clips\.twitch\.tv/([A-Za-z0-9_-]+)")
+            ?? TryExtractId(videoIdOrUrl, ShortClipUrlRegex())
             // Channel Clip URL
             // https://www.twitch.tv/username/clip/EnergeticSnappyPanda-abc123
-            ?? TryExtractId(videoIdOrUrl, @"twitch\.tv/[^/]+/clip/([A-Za-z0-9_-]+)");
+            ?? TryExtractId(videoIdOrUrl, ChannelClipUrlRegex());
 
-        static string? TryExtractId(string url, string pattern)
+        static string? TryExtractId(string url, Regex regex)
         {
-            var id = Regex.Match(url, pattern).Groups[1].Value.Pipe(WebUtility.UrlDecode);
+            var id = regex.Match(url).Groups[1].Value.Pipe(WebUtility.UrlDecode);
             return !string.IsNullOrWhiteSpace(id) && IsValid(id) ? id : null;
         }
     }
+
+    [GeneratedRegex(@"twitch\.tv/videos/(\d+)")]
+    private static partial Regex VideoUrlRegex();
+
+    [GeneratedRegex(@"clips\.twitch\.tv/([A-Za-z0-9_-]+)")]
+    private static partial Regex ShortClipUrlRegex();
+
+    [GeneratedRegex(@"twitch\.tv/[^/]+/clip/([A-Za-z0-9_-]+)")]
+    private static partial Regex ChannelClipUrlRegex();
 
     /// <summary>
     /// Attempts to parse the specified string as a Twitch VOD/Clip ID or URL.

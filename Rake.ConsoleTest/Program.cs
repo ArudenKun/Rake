@@ -51,11 +51,31 @@ public static class Program
                 Console.WriteLine($"Finished Download {tool} {version}");
             }
 
+            var path = Path.Combine(
+                AppContext.BaseDirectory,
+                "Tools",
+                $"test_clip_{Guid.CreateVersion7():N}.mp4"
+            );
             var twitchClient = application.ServiceProvider.GetRequiredService<TwitchClient>();
-            var video = await twitchClient.GetAsync(id);
-            // var stream = video.Streams.First();
-            // Console.WriteLine($"Parsed Length: {ByteSize.Parse($"{stream.FileSize}").Humanize()}");
-            Console.WriteLine(JsonSerializer.Serialize(video, JsonSerializerOptions));
+            // var media = await twitchClient.GetAsync(id);
+            await twitchClient.DownloadClipAsync(
+                TestClipUrl,
+                path,
+                options =>
+                    options
+                        .OnDownloadStarted(() =>
+                        {
+                            Console.WriteLine("Download Started");
+                        })
+                        .OnDownloadProgress(percentage =>
+                        {
+                            Console.WriteLine($"Downloading {percentage}%");
+                        })
+                        .OnDownloadCompleted(() =>
+                        {
+                            Console.WriteLine("Download Completed");
+                        })
+            );
         }
         catch (Exception e)
         {

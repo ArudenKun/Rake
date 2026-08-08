@@ -8,8 +8,10 @@ using CliWrap.Builders;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PowerKit;
 using Rake.Core.Extensions;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Guids;
 
 namespace Rake.Core.Twitch;
 
@@ -33,6 +35,9 @@ public partial class TwitchClient : ITransientDependency
             LoggerFactory.CreateLogger(GetType().FullName!)
         );
 
+    protected IGuidGenerator GuidGenerator =>
+        LazyServiceProvider.LazyGetRequiredService<IGuidGenerator>();
+
     protected IToolsService ToolsService =>
         LazyServiceProvider.LazyGetRequiredService<IToolsService>();
 
@@ -54,18 +59,18 @@ public partial class TwitchClient : ITransientDependency
                 .Add("-f")
                 .Add("Raw")
                 .Build();
+
             await Cli.Wrap(ToolsService.GetPath(Tool.TwitchDownloaderCli))
                 .WithArguments(arguments)
                 .WithStandardOutputPipe(PipeTarget.ToStringBuilder(stdOut))
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErr))
-                .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync(cancellationToken);
 
-            return await Task.Run(() => ParseToTwitchVideo(stdOut.ToString()), cancellationToken);
+            return ParseToTwitchVideo(stdOut.ToString());
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Logger.LogError("{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
+            Logger.LogError(ex, "{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
             throw;
         }
     }
@@ -77,12 +82,19 @@ public partial class TwitchClient : ITransientDependency
         CancellationToken cancellationToken = default
     )
     {
+        if (!id.IsVideo)
+        {
+            throw new InvalidOperationException($"{id} is not a valid video id");
+        }
         var optionsBuilder = new TwitchVideoDownloadOptionsBuilder();
         configureOptions?.Invoke(optionsBuilder);
         var options = optionsBuilder.Build();
         var stdErr = new StringBuilder();
         string? currentStage = null;
 
+        var tempDirectory = new TempDirectory(
+            Options.ToolsDirectory.CombinePath($"{GuidGenerator.Create():N}")
+        );
         try
         {
             await Cli.Wrap(ToolsService.GetPath(Tool.TwitchDownloaderCli))
@@ -95,18 +107,23 @@ public partial class TwitchClient : ITransientDependency
                         .AddIf(
                             options.TrimBeginningTime.HasValue,
                             "-b",
-                            $"{options.TrimBeginningTime!.Value.TotalSeconds}s"
+                            options.TrimBeginningTime!.Value.TotalSeconds.ToString(
+                                CultureInfo.InvariantCulture
+                            ) + "s"
                         )
                         .AddIf(
                             options.TrimEndingTime.HasValue,
                             "-e",
-                            $"{options.TrimEndingTime!.Value.TotalSeconds}s"
+                            options.TrimEndingTime!.Value.TotalSeconds.ToString(
+                                CultureInfo.InvariantCulture
+                            ) + "s"
                         )
                         .Add("-t", $"{options.Threads}")
                         .Add("--trim-mode", options.TrimMode.ToString())
                         .AddIfNotNullOrWhiteSpace("--oauth", options.OAuth)
                         .Add("--ffmpeg-path", ToolsService.GetPath(Tool.FFmpeg))
-                        .Add("--temp-path", Options.ToolsDirectory.CombinePath("temp"))
+                        // ReSharper disable once AccessToDisposedClosure
+                        .Add("--temp-path", tempDirectory.Path)
                         .Add("--collision", "Overwrite")
                 )
                 .WithStandardOutputPipe(
@@ -117,7 +134,16 @@ public partial class TwitchClient : ITransientDependency
                             return;
 
                         var stage = match.Groups["stage"].Value;
-                        var percentage = int.Parse(match.Groups["percent"].Value);
+                        if (
+                            !int.TryParse(
+                                match.Groups["percent"].Value,
+                                NumberStyles.Integer,
+                                CultureInfo.InvariantCulture,
+                                out var percentage
+                            )
+                        )
+                            return;
+
                         var isNewStage = !string.Equals(
                             currentStage,
                             stage,
@@ -129,42 +155,49 @@ public partial class TwitchClient : ITransientDependency
                             // Fire completion for previous stage before switching
                             CompleteStage(currentStage);
                             currentStage = stage;
+
+                            switch (stage)
+                            {
+                                case "Downloading":
+                                    options.DownloadStarted?.Invoke();
+                                    break;
+                                case "Verifying Parts":
+                                    options.VerifyStarted?.Invoke();
+                                    break;
+                                case "Finalizing Video":
+                                    options.FinalizingStarted?.Invoke();
+                                    break;
+                            }
                         }
 
                         switch (stage)
                         {
                             case "Downloading":
-                                if (isNewStage)
-                                    options.DownloadStarted?.Invoke();
-                                else
-                                    options.DownloadProgress?.Invoke(percentage);
+                                options.DownloadProgress?.Invoke(percentage);
                                 break;
                             case "Verifying Parts":
-                                if (isNewStage)
-                                    options.VerifyStarted?.Invoke();
-                                else
-                                    options.VerifyProgress?.Invoke(percentage);
+                                options.VerifyProgress?.Invoke(percentage);
                                 break;
                             case "Finalizing Video":
-                                if (isNewStage)
-                                    options.FinalizingStarted?.Invoke();
-                                else
-                                    options.FinalizingProgress?.Invoke(percentage);
+                                options.FinalizingProgress?.Invoke(percentage);
                                 break;
                         }
                     })
                 )
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErr))
-                .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync(cancellationToken);
 
             // Fire completion for the final stage once execution succeeds
             CompleteStage(currentStage);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Logger.LogError("{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
+            Logger.LogError(ex, "{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
             throw;
+        }
+        finally
+        {
+            tempDirectory.Dispose();
         }
 
         return;
@@ -193,12 +226,18 @@ public partial class TwitchClient : ITransientDependency
         CancellationToken cancellationToken = default
     )
     {
+        if (!id.IsClip)
+        {
+            throw new InvalidOperationException($"{id} is not a valid clip id");
+        }
         var optionsBuilder = new TwitchClipDownloadOptionsBuilder();
         configureOptions?.Invoke(optionsBuilder);
         var options = optionsBuilder.Build();
         var stdErr = new StringBuilder();
         string? currentStage = null;
-
+        var tempDirectory = new TempDirectory(
+            Options.ToolsDirectory.CombinePath($"{GuidGenerator.Create():N}")
+        );
         try
         {
             await Cli.Wrap(ToolsService.GetPath(Tool.TwitchDownloaderCli))
@@ -221,7 +260,15 @@ public partial class TwitchClient : ITransientDependency
                             return;
 
                         var stage = match.Groups["stage"].Value;
-                        var percentage = int.Parse(match.Groups["percent"].Value);
+                        if (
+                            !int.TryParse(
+                                match.Groups["percent"].Value,
+                                NumberStyles.Integer,
+                                CultureInfo.InvariantCulture,
+                                out var percentage
+                            )
+                        )
+                            return;
 
                         var isNewStage = !string.Equals(
                             currentStage,
@@ -234,37 +281,45 @@ public partial class TwitchClient : ITransientDependency
                             // Fire completion for previous stage before switching
                             CompleteStage(currentStage);
                             currentStage = stage;
+
+                            switch (stage)
+                            {
+                                case "Downloading Clip":
+                                    options.DownloadStarted?.Invoke();
+                                    break;
+
+                                case "Encoding Clip Metadata":
+                                    options.EncodingStarted?.Invoke();
+                                    break;
+                            }
                         }
 
                         switch (stage)
                         {
                             case "Downloading Clip":
-                                if (isNewStage)
-                                    options.DownloadStarted?.Invoke();
-                                else
-                                    options.DownloadProgress?.Invoke(percentage);
+                                options.DownloadProgress?.Invoke(percentage);
                                 break;
 
                             case "Encoding Clip Metadata":
-                                if (isNewStage)
-                                    options.EncodingStarted?.Invoke();
-                                else
-                                    options.EncodingProgress?.Invoke(percentage);
+                                options.EncodingProgress?.Invoke(percentage);
                                 break;
                         }
                     })
                 )
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErr))
-                .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync(cancellationToken);
 
             // Fire completion for the final stage once execution succeeds
             CompleteStage(currentStage);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Logger.LogError("{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
+            Logger.LogError(ex, "{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
             throw;
+        }
+        finally
+        {
+            tempDirectory.Dispose();
         }
 
         return;
@@ -286,8 +341,6 @@ public partial class TwitchClient : ITransientDependency
 
     private static TwitchMedia ParseToTwitchVideo(string rawOutput)
     {
-        var lines = rawOutput.Split(["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries);
-
         var title = string.Empty;
         long lengthSeconds = 0;
         var viewCount = 0;
@@ -300,11 +353,16 @@ public partial class TwitchClient : ITransientDependency
         var chapters = new List<TwitchMediaChapter>();
 
         // 1. Parse JSON objects for Video metadata and Moments/Chapters
-        foreach (var line in lines.Where(line => line.StartsWith('{')).Select(line => line.Trim()))
+        using var reader = new StringReader(rawOutput);
+        while (reader.ReadLine() is { } line)
         {
+            var trimmedLine = line.Trim();
+            if (!trimmedLine.StartsWith('{'))
+                continue;
+
             try
             {
-                using var doc = JsonDocument.Parse(line);
+                using var doc = JsonDocument.Parse(trimmedLine);
                 var root = doc.RootElement;
 
                 if (
@@ -460,7 +518,12 @@ public partial class TwitchClient : ITransientDependency
             long bandwidth = 0;
             var bwMatch = BandwidthRegex().Match(attrs);
             if (bwMatch.Success)
-                long.TryParse(bwMatch.Groups["bw"].Value, out bandwidth);
+                long.TryParse(
+                    bwMatch.Groups["bw"].Value,
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out bandwidth
+                );
 
             // Compute total bytes: (bandwidth in bits/sec * length in seconds) / 8 bits per byte
             var calculatedBytes = bandwidth * lengthSeconds / 8;
@@ -468,7 +531,7 @@ public partial class TwitchClient : ITransientDependency
 
             // Codecs
             var codecs = new List<string>();
-            var codecMatch = CodexRegex().Match(attrs);
+            var codecMatch = CodecRegex().Match(attrs);
             if (codecMatch.Success)
             {
                 codecs =
@@ -522,8 +585,7 @@ public partial class TwitchClient : ITransientDependency
     #region VideoDownloadPattens
 
     [GeneratedRegex(
-        @"\[STATUS\]\s*-\s*(?<stage>Downloading|Verifying Parts|Finalizing Video)\s+(?<percent>\d{1,3})%\s*\[(?<current>\d+)/(?<total>\d+)\]",
-        RegexOptions.Compiled
+        @"\[STATUS\]\s*-\s*(?<stage>Downloading|Verifying Parts|Finalizing Video)\s+(?<percent>\d{1,3})%\s*\[(?<current>\d+)/(?<total>\d+)\]"
     )]
     private static partial Regex VideoDownloadProgressRegex();
 
@@ -532,8 +594,7 @@ public partial class TwitchClient : ITransientDependency
     #region ClipDownloadPatterns
 
     [GeneratedRegex(
-        @"\[STATUS\]\s*-\s*(?<stage>Downloading Clip|Encoding Clip Metadata)\s+(?<percent>\d{1,3})%",
-        RegexOptions.Compiled
+        @"\[STATUS\]\s*-\s*(?<stage>Downloading Clip|Encoding Clip Metadata)\s+(?<percent>\d{1,3})%"
     )]
     private static partial Regex ClipDownloadProgressRegex();
 
@@ -542,11 +603,11 @@ public partial class TwitchClient : ITransientDependency
     #region InfoPatterns
 
     // Regex for matching M3U8 stream tags
-    [GeneratedRegex(@"#EXT-X-MEDIA:[^\r\n]*?NAME=""(?<name>[^""]+)""", RegexOptions.Compiled)]
+    [GeneratedRegex(@"#EXT-X-MEDIA:[^\r\n]*?NAME=""(?<name>[^""]+)""")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     private static partial Regex M3u8MediaRegex();
 
-    [GeneratedRegex(@"#EXT-X-STREAM-INF:(?<attrs>[^\r\n]+)", RegexOptions.Compiled)]
+    [GeneratedRegex(@"#EXT-X-STREAM-INF:(?<attrs>[^\r\n]+)")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     private static partial Regex M3u8StreamInfRegex();
 
@@ -554,7 +615,7 @@ public partial class TwitchClient : ITransientDependency
     private static partial Regex BandwidthRegex();
 
     [GeneratedRegex(@"CODECS=""(?<codecs>[^""]+)""")]
-    private static partial Regex CodexRegex();
+    private static partial Regex CodecRegex();
 
     [GeneratedRegex(@"RESOLUTION=(?<res>\d+x\d+)")]
     private static partial Regex ResolutionRegex();
