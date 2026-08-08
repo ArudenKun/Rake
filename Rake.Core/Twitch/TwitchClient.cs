@@ -1,0 +1,566 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using CliWrap;
+using CliWrap.Builders;
+using Humanizer;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Rake.Core.Extensions;
+using Volo.Abp.DependencyInjection;
+
+namespace Rake.Core.Twitch;
+
+public partial class TwitchClient : ITransientDependency
+{
+    public TwitchClient(IAbpLazyServiceProvider lazyServiceProvider)
+    {
+        LazyServiceProvider = lazyServiceProvider;
+    }
+
+    protected IAbpLazyServiceProvider LazyServiceProvider { get; }
+
+    protected RakeCoreOptions Options =>
+        LazyServiceProvider.LazyGetRequiredService<IOptions<RakeCoreOptions>>().Value;
+
+    protected ILoggerFactory LoggerFactory =>
+        LazyServiceProvider.LazyGetRequiredService<ILoggerFactory>();
+
+    protected ILogger Logger =>
+        LazyServiceProvider.LazyGetService<ILogger>(_ =>
+            LoggerFactory.CreateLogger(GetType().FullName!)
+        );
+
+    protected IToolsService ToolsService =>
+        LazyServiceProvider.LazyGetRequiredService<IToolsService>();
+
+    public async Task<TwitchMedia> GetAsync(
+        TwitchId id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var stdOut = new StringBuilder();
+        var stdErr = new StringBuilder();
+
+        try
+        {
+            var argumentsBuilder = new ArgumentsBuilder();
+            var arguments = argumentsBuilder
+                .Add("info")
+                .Add("-u")
+                .Add(id)
+                .Add("-f")
+                .Add("Raw")
+                .Build();
+            await Cli.Wrap(ToolsService.GetPath(Tool.TwitchDownloaderCli))
+                .WithArguments(arguments)
+                .WithStandardOutputPipe(PipeTarget.ToStringBuilder(stdOut))
+                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErr))
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync(cancellationToken);
+
+            return await Task.Run(() => ParseToTwitchVideo(stdOut.ToString()), cancellationToken);
+        }
+        catch (Exception)
+        {
+            Logger.LogError("{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
+            throw;
+        }
+    }
+
+    public async Task DownloadVideoAsync(
+        TwitchId id,
+        TwitchMediaFilePath outputPath,
+        Action<TwitchVideoDownloadOptionsBuilder>? configureOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var optionsBuilder = new TwitchVideoDownloadOptionsBuilder();
+        configureOptions?.Invoke(optionsBuilder);
+        var options = optionsBuilder.Build();
+        var stdErr = new StringBuilder();
+        string? currentStage = null;
+
+        try
+        {
+            await Cli.Wrap(ToolsService.GetPath(Tool.TwitchDownloaderCli))
+                .WithArguments(builder =>
+                    builder
+                        .Add("videodownload")
+                        .Add("-u", id)
+                        .Add("-o", outputPath)
+                        .AddIfNotNullOrWhiteSpace("-q", options.Quality)
+                        .AddIf(
+                            options.TrimBeginningTime.HasValue,
+                            "-b",
+                            $"{options.TrimBeginningTime!.Value.TotalSeconds}s"
+                        )
+                        .AddIf(
+                            options.TrimEndingTime.HasValue,
+                            "-e",
+                            $"{options.TrimEndingTime!.Value.TotalSeconds}s"
+                        )
+                        .Add("-t", $"{options.Threads}")
+                        .Add("--trim-mode", options.TrimMode.ToString())
+                        .AddIfNotNullOrWhiteSpace("--oauth", options.OAuth)
+                        .Add("--ffmpeg-path", ToolsService.GetPath(Tool.FFmpeg))
+                        .Add("--temp-path", Options.ToolsDirectory.CombinePath("temp"))
+                        .Add("--collision", "Overwrite")
+                )
+                .WithStandardOutputPipe(
+                    PipeTarget.ToDelegate(line =>
+                    {
+                        var match = VideoDownloadProgressRegex().Match(line);
+                        if (!match.Success)
+                            return;
+
+                        var stage = match.Groups["stage"].Value;
+                        var percentage = int.Parse(match.Groups["percent"].Value);
+                        var isNewStage = !string.Equals(
+                            currentStage,
+                            stage,
+                            StringComparison.Ordinal
+                        );
+
+                        if (isNewStage)
+                        {
+                            // Fire completion for previous stage before switching
+                            CompleteStage(currentStage);
+                            currentStage = stage;
+                        }
+
+                        switch (stage)
+                        {
+                            case "Downloading":
+                                if (isNewStage)
+                                    options.DownloadStarted?.Invoke();
+                                else
+                                    options.DownloadProgress?.Invoke(percentage);
+                                break;
+                            case "Verifying Parts":
+                                if (isNewStage)
+                                    options.VerifyStarted?.Invoke();
+                                else
+                                    options.VerifyProgress?.Invoke(percentage);
+                                break;
+                            case "Finalizing Video":
+                                if (isNewStage)
+                                    options.FinalizingStarted?.Invoke();
+                                else
+                                    options.FinalizingProgress?.Invoke(percentage);
+                                break;
+                        }
+                    })
+                )
+                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErr))
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync(cancellationToken);
+
+            // Fire completion for the final stage once execution succeeds
+            CompleteStage(currentStage);
+        }
+        catch (Exception)
+        {
+            Logger.LogError("{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
+            throw;
+        }
+
+        return;
+
+        void CompleteStage(string? stage)
+        {
+            switch (stage)
+            {
+                case "Downloading":
+                    options.DownloadCompleted?.Invoke();
+                    break;
+                case "Verifying Parts":
+                    options.VerifyCompleted?.Invoke();
+                    break;
+                case "Finalizing Video":
+                    options.FinalizingCompleted?.Invoke();
+                    break;
+            }
+        }
+    }
+
+    public async Task DownloadClipAsync(
+        TwitchId id,
+        TwitchMediaFilePath outputPath,
+        Action<TwitchClipDownloadOptionsBuilder>? configureOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var optionsBuilder = new TwitchClipDownloadOptionsBuilder();
+        configureOptions?.Invoke(optionsBuilder);
+        var options = optionsBuilder.Build();
+        var stdErr = new StringBuilder();
+        string? currentStage = null;
+
+        try
+        {
+            await Cli.Wrap(ToolsService.GetPath(Tool.TwitchDownloaderCli))
+                .WithArguments(builder =>
+                    builder
+                        .Add("clipdownload")
+                        .Add("-u", id)
+                        .Add("-o", outputPath)
+                        .AddIfNotNullOrWhiteSpace("-q", options.Quality)
+                        .Add("--encode-metadata", $"{options.EncodeMetadata}")
+                        .Add("--ffmpeg-path", ToolsService.GetPath(Tool.FFmpeg))
+                        .Add("--temp-path", Options.ToolsDirectory.CombinePath("temp"))
+                        .Add("--collision", "Overwrite")
+                )
+                .WithStandardOutputPipe(
+                    PipeTarget.ToDelegate(line =>
+                    {
+                        var match = ClipDownloadProgressRegex().Match(line);
+                        if (!match.Success)
+                            return;
+
+                        var stage = match.Groups["stage"].Value;
+                        var percentage = int.Parse(match.Groups["percent"].Value);
+
+                        var isNewStage = !string.Equals(
+                            currentStage,
+                            stage,
+                            StringComparison.Ordinal
+                        );
+
+                        if (isNewStage)
+                        {
+                            // Fire completion for previous stage before switching
+                            CompleteStage(currentStage);
+                            currentStage = stage;
+                        }
+
+                        switch (stage)
+                        {
+                            case "Downloading Clip":
+                                if (isNewStage)
+                                    options.DownloadStarted?.Invoke();
+                                else
+                                    options.DownloadProgress?.Invoke(percentage);
+                                break;
+
+                            case "Encoding Clip Metadata":
+                                if (isNewStage)
+                                    options.EncodingStarted?.Invoke();
+                                else
+                                    options.EncodingProgress?.Invoke(percentage);
+                                break;
+                        }
+                    })
+                )
+                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErr))
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync(cancellationToken);
+
+            // Fire completion for the final stage once execution succeeds
+            CompleteStage(currentStage);
+        }
+        catch (Exception)
+        {
+            Logger.LogError("{Tool} Error: {Error}", Tool.TwitchDownloaderCli, stdErr);
+            throw;
+        }
+
+        return;
+
+        void CompleteStage(string? stage)
+        {
+            switch (stage)
+            {
+                case "Downloading Clip":
+                    options.DownloadCompleted?.Invoke();
+                    break;
+
+                case "Encoding Clip Metadata":
+                    options.EncodingCompleted?.Invoke();
+                    break;
+            }
+        }
+    }
+
+    private static TwitchMedia ParseToTwitchVideo(string rawOutput)
+    {
+        var lines = rawOutput.Split(["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries);
+
+        var title = string.Empty;
+        long lengthSeconds = 0;
+        var viewCount = 0;
+        var createdAt = DateTime.MinValue;
+        var description = string.Empty;
+
+        var thumbnailUrls = new List<string>();
+        TwitchOwner owner = new(string.Empty, string.Empty, string.Empty);
+        TwitchGame game = new(string.Empty, string.Empty, string.Empty);
+        var chapters = new List<TwitchMediaChapter>();
+
+        // 1. Parse JSON objects for Video metadata and Moments/Chapters
+        foreach (var line in lines.Where(line => line.StartsWith('{')).Select(line => line.Trim()))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(line);
+                var root = doc.RootElement;
+
+                if (
+                    root.TryGetProperty("data", out var data)
+                    && data.TryGetProperty("video", out var video)
+                )
+                {
+                    // Metadata JSON block
+                    if (video.TryGetProperty("title", out var titleProp))
+                    {
+                        title = titleProp.GetString() ?? string.Empty;
+                        lengthSeconds = video.TryGetProperty("lengthSeconds", out var len)
+                            ? len.GetInt64()
+                            : 0;
+                        viewCount = video.TryGetProperty("viewCount", out var views)
+                            ? views.GetInt32()
+                            : 0;
+                        description =
+                            video.TryGetProperty("description", out var desc)
+                            && desc.ValueKind != JsonValueKind.Null
+                                ? desc.GetString() ?? string.Empty
+                                : string.Empty;
+
+                        if (
+                            video.TryGetProperty("createdAt", out var created)
+                            && DateTimeOffset.TryParse(created.GetString(), out var dt)
+                        )
+                        {
+                            createdAt = dt.UtcDateTime;
+                        }
+
+                        // Deserialize Thumbnail URLs
+                        if (
+                            video.TryGetProperty("thumbnailURLs", out var thumbsElement)
+                            && thumbsElement.ValueKind == JsonValueKind.Array
+                        )
+                        {
+                            var parsedUrls = thumbsElement.Deserialize<List<string>>();
+                            if (parsedUrls != null)
+                            {
+                                thumbnailUrls.AddRange(parsedUrls);
+                            }
+                        }
+
+                        // Deserialize Owner object directly
+                        if (
+                            video.TryGetProperty("owner", out var ownerElement)
+                            && ownerElement.ValueKind != JsonValueKind.Null
+                        )
+                        {
+                            var parsedOwner = ownerElement.Deserialize<TwitchOwner>();
+                            if (parsedOwner != null)
+                            {
+                                owner = parsedOwner;
+                            }
+                        }
+
+                        // Deserialize Game object directly
+                        if (
+                            video.TryGetProperty("game", out var gameElement)
+                            && gameElement.ValueKind != JsonValueKind.Null
+                        )
+                        {
+                            var parsedGame = gameElement.Deserialize<TwitchGame>();
+                            if (parsedGame != null)
+                            {
+                                game = parsedGame;
+                            }
+                        }
+                    }
+
+                    // Chapters/Moments JSON block
+                    if (
+                        video.TryGetProperty("moments", out var moments)
+                        && moments.TryGetProperty("edges", out var edges)
+                    )
+                    {
+                        foreach (var edge in edges.EnumerateArray())
+                        {
+                            if (edge.TryGetProperty("node", out var node))
+                            {
+                                var chapterDesc = node.TryGetProperty("description", out var d)
+                                    ? d.GetString() ?? string.Empty
+                                    : string.Empty;
+                                var type = node.TryGetProperty("type", out var t)
+                                    ? t.GetString() ?? string.Empty
+                                    : string.Empty;
+                                var posMs = node.TryGetProperty("positionMilliseconds", out var pos)
+                                    ? pos.GetInt32()
+                                    : 0;
+                                var durMs = node.TryGetProperty("durationMilliseconds", out var dur)
+                                    ? dur.GetInt32()
+                                    : 0;
+
+                                var startSec = posMs / 1000;
+                                var lengthSec = durMs / 1000;
+
+                                chapters.Add(
+                                    new TwitchMediaChapter(
+                                        Category: chapterDesc,
+                                        Type: type,
+                                        StartSeconds: startSec,
+                                        EndSeconds: startSec + lengthSec,
+                                        LengthSeconds: lengthSec
+                                    )
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                // Skip non-JSON lines
+            }
+        }
+
+        // 2. Parse streams directly from the M3U8 Master Playlist section using lengthSeconds to calculate FileSize
+        var streams = ParseM3u8Streams(rawOutput, lengthSeconds);
+
+        return new TwitchMedia(
+            Title: title,
+            Length: lengthSeconds,
+            ThumbnailUrls: thumbnailUrls,
+            Owner: owner,
+            Game: game,
+            Views: viewCount,
+            CreatedAt: createdAt,
+            Streams: streams,
+            Chapters: chapters,
+            Description: description
+        );
+    }
+
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static List<TwitchVideoStream> ParseM3u8Streams(string m3u8Content, long lengthSeconds)
+    {
+        var streams = new List<TwitchVideoStream>();
+
+        var mediaMatches = M3u8MediaRegex().Matches(m3u8Content);
+        var streamInfMatches = M3u8StreamInfRegex().Matches(m3u8Content);
+
+        for (var i = 0; i < streamInfMatches.Count; i++)
+        {
+            var streamMatch = streamInfMatches[i];
+            var attrs = streamMatch.Groups["attrs"].Value;
+
+            // Name
+            var name =
+                i < mediaMatches.Count ? mediaMatches[i].Groups["name"].Value : $"Stream_{i + 1}";
+
+            // Bandwidth
+            long bandwidth = 0;
+            var bwMatch = BandwidthRegex().Match(attrs);
+            if (bwMatch.Success)
+                long.TryParse(bwMatch.Groups["bw"].Value, out bandwidth);
+
+            // Compute total bytes: (bandwidth in bits/sec * length in seconds) / 8 bits per byte
+            var calculatedBytes = bandwidth * lengthSeconds / 8;
+            var fileSize = ByteSize.FromBytes(calculatedBytes);
+
+            // Codecs
+            var codecs = new List<string>();
+            var codecMatch = CodexRegex().Match(attrs);
+            if (codecMatch.Success)
+            {
+                codecs =
+                [
+                    .. codecMatch
+                        .Groups["codecs"]
+                        .Value.Split(
+                            ',',
+                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                        ),
+                ];
+            }
+
+            // Resolution
+            var resolution = "N/A";
+            var resMatch = ResolutionRegex().Match(attrs);
+            if (resMatch.Success)
+                resolution = resMatch.Groups["res"].Value;
+
+            // FPS
+            int? fps = null;
+            var fpsMatch = FrameRateRegex().Match(attrs);
+            if (
+                fpsMatch.Success
+                && double.TryParse(
+                    fpsMatch.Groups["fps"].Value,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out var fpsDouble
+                )
+            )
+            {
+                fps = (int)Math.Round(fpsDouble);
+            }
+
+            streams.Add(
+                new TwitchVideoStream(
+                    Name: name,
+                    Resolution: resolution,
+                    Fps: fps,
+                    Codecs: codecs,
+                    Bitrate: bandwidth,
+                    FileSize: fileSize
+                )
+            );
+        }
+
+        return streams;
+    }
+
+    #region VideoDownloadPattens
+
+    [GeneratedRegex(
+        @"\[STATUS\]\s*-\s*(?<stage>Downloading|Verifying Parts|Finalizing Video)\s+(?<percent>\d{1,3})%\s*\[(?<current>\d+)/(?<total>\d+)\]",
+        RegexOptions.Compiled
+    )]
+    private static partial Regex VideoDownloadProgressRegex();
+
+    #endregion
+
+    #region ClipDownloadPatterns
+
+    [GeneratedRegex(
+        @"\[STATUS\]\s*-\s*(?<stage>Downloading Clip|Encoding Clip Metadata)\s+(?<percent>\d{1,3})%",
+        RegexOptions.Compiled
+    )]
+    private static partial Regex ClipDownloadProgressRegex();
+
+    #endregion
+
+    #region InfoPatterns
+
+    // Regex for matching M3U8 stream tags
+    [GeneratedRegex(@"#EXT-X-MEDIA:[^\r\n]*?NAME=""(?<name>[^""]+)""", RegexOptions.Compiled)]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static partial Regex M3u8MediaRegex();
+
+    [GeneratedRegex(@"#EXT-X-STREAM-INF:(?<attrs>[^\r\n]+)", RegexOptions.Compiled)]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static partial Regex M3u8StreamInfRegex();
+
+    [GeneratedRegex(@"BANDWIDTH=(?<bw>\d+)")]
+    private static partial Regex BandwidthRegex();
+
+    [GeneratedRegex(@"CODECS=""(?<codecs>[^""]+)""")]
+    private static partial Regex CodexRegex();
+
+    [GeneratedRegex(@"RESOLUTION=(?<res>\d+x\d+)")]
+    private static partial Regex ResolutionRegex();
+
+    [GeneratedRegex(@"FRAME-RATE=(?<fps>[\d\.]+)")]
+    private static partial Regex FrameRateRegex();
+
+    #endregion
+}

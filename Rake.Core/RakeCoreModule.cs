@@ -11,10 +11,14 @@ public class RakeCoreModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        context.Services.AddHttpClient<IToolsService, ToolsService>(client =>
-            client.DefaultRequestHeaders.UserAgent.Add(
-                new ProductInfoHeaderValue(new ProductHeaderValue(RakeConsts.Name))
-            )
-        );
+        context
+            .Services.AddHttpClient()
+            .ConfigureHttpClientDefaults(builder =>
+                builder.ConfigureHttpClient(client =>
+                    client.DefaultRequestHeaders.UserAgent.Add(
+                        new ProductInfoHeaderValue(new ProductHeaderValue(RakeConsts.Name))
+                    )
+                )
+            );
     }
 }

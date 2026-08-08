@@ -9,51 +9,67 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PowerKit;
 using PowerKit.Extensions;
+using Volo.Abp.DependencyInjection;
 using Volo.Abp.Guids;
 using Volo.Abp.IO;
 
 namespace Rake.Core;
 
 [AutoInterface]
-public partial class ToolsService : IToolsService
+public partial class ToolsService : IToolsService, ITransientDependency
 {
-    private const RegexOptions DefaultRegexOptions = RegexOptions.Compiled;
-
-    [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
-    private static partial Regex DenoVersionRegex();
-
-    [GeneratedRegex(@"\d{4}\.\d{2}\.\d{2}", DefaultRegexOptions)]
-    private static partial Regex YtDlpVersionRegex();
-
-    [GeneratedRegex(@"version\s+([^\s]+)", DefaultRegexOptions)]
-    private static partial Regex FFmpegVersionRegex();
-
-    [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
-    private static partial Regex Aria2VersionRegex();
-
-    public ToolsService(
-        IOptions<RakeCoreOptions> options,
-        HttpClient httpClient,
-        IGuidGenerator guidGenerator,
-        ILogger<ToolsService> logger
-    )
+    public ToolsService(IAbpLazyServiceProvider lazyServiceProvider)
     {
-        Options = options.Value;
-        HttpClient = httpClient;
-        GuidGenerator = guidGenerator;
-        Logger = logger;
+        LazyServiceProvider = lazyServiceProvider;
     }
 
-    protected RakeCoreOptions Options { get; }
-    protected HttpClient HttpClient { get; }
-    protected IGuidGenerator GuidGenerator { get; }
-    protected ILogger<ToolsService> Logger { get; }
+    protected IAbpLazyServiceProvider LazyServiceProvider { get; }
+
+    protected RakeCoreOptions Options =>
+        LazyServiceProvider.LazyGetRequiredService<IOptions<RakeCoreOptions>>().Value;
+
+    protected IGuidGenerator GuidGenerator =>
+        LazyServiceProvider.LazyGetRequiredService<IGuidGenerator>();
+
+    protected IHttpClientFactory HttpClientFactory =>
+        LazyServiceProvider.LazyGetRequiredService<IHttpClientFactory>();
+
+    protected HttpClient HttpClient =>
+        LazyServiceProvider.LazyGetService(HttpClientFactory.CreateClient());
+
+    protected ILoggerFactory LoggerFactory =>
+        LazyServiceProvider.LazyGetRequiredService<ILoggerFactory>();
+
+    protected ILogger Logger =>
+        LazyServiceProvider.LazyGetService<ILogger>(_ =>
+            LoggerFactory.CreateLogger(GetType().FullName!)
+        );
 
     public bool IsAvailable(Tool tool) => IsLocalAvailable(tool) || IsPathAvailable(tool);
 
     public bool IsLocalAvailable(Tool tool) => File.Exists(GetLocalPath(tool));
 
     public bool IsPathAvailable(Tool tool) => !string.IsNullOrEmpty(GetSystemPath(tool));
+
+    private const RegexOptions DefaultRegexOptions = RegexOptions.Compiled;
+
+    // [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
+    // private static partial Regex DenoVersionRegex();
+    //
+    // [GeneratedRegex(@"\d{4}\.\d{2}\.\d{2}", DefaultRegexOptions)]
+    // private static partial Regex YtDlpVersionRegex();
+
+    [GeneratedRegex(@"version\s+([^\s]+)", DefaultRegexOptions)]
+    private static partial Regex FFmpegVersionRegex();
+
+    // [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
+    // private static partial Regex Aria2VersionRegex();
+    //
+    // [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
+    // private static partial Regex QuickJsVersionRegex();
+
+    [GeneratedRegex(@"\d+\.\d+\.\d+", DefaultRegexOptions)]
+    private static partial Regex TwitchDownloaderCliVersionRegex();
 
     public string GetLocalPath(Tool tool)
     {
@@ -188,13 +204,14 @@ public partial class ToolsService : IToolsService
 
         switch (tool)
         {
-            case Tool.YtDlp:
-            case Tool.Aria2:
-                await DownloadFileAsync(downloadUrl, destinationPath, progress, cancellationToken);
-                break;
-
-            case Tool.Deno:
+            // case Tool.YtDlp:
+            // case Tool.Aria2:
+            //     await DownloadFileAsync(downloadUrl, destinationPath, progress, cancellationToken);
+            //     break;
+            //
+            // case Tool.Deno:
             case Tool.FFmpeg:
+            case Tool.TwitchDownloaderCli:
                 await DownloadAndExtractZipAsync(
                     downloadUrl,
                     toolsDirectory,
@@ -249,10 +266,11 @@ public partial class ToolsService : IToolsService
 
         return tool switch
         {
-            Tool.Deno => DenoVersionRegex().Match(firstLine).Value,
-            Tool.YtDlp => YtDlpVersionRegex().Match(firstLine).Value,
+            // Tool.Deno => DenoVersionRegex().Match(firstLine).Value,
+            // Tool.YtDlp => YtDlpVersionRegex().Match(firstLine).Value,
             Tool.FFmpeg => MatchFFmpegVersion(firstLine),
-            Tool.Aria2 => Aria2VersionRegex().Match(firstLine).Value,
+            Tool.TwitchDownloaderCli => TwitchDownloaderCliVersionRegex().Match(firstLine).Value,
+            // Tool.Aria2 => Aria2VersionRegex().Match(firstLine).Value,
             _ => firstLine.Trim(),
         };
     }
@@ -378,55 +396,26 @@ public partial class ToolsService : IToolsService
     ) =>
         tool switch
         {
-            Tool.YtDlp => GetYtDlpDownloadUrl(),
-            Tool.Deno => GetDenoDownloadUrl(),
+            // Tool.YtDlp => GetYtDlpDownloadUrl(),
+            // Tool.Deno => GetDenoDownloadUrl(),
             Tool.FFmpeg => OperatingSystem.IsWindows()
                 ? "https://github.com/Tyrrrz/FFmpegBin/releases/latest/download/ffmpeg-windows-x64.zip"
             : OperatingSystem.IsMacOS()
                 ? "https://github.com/Tyrrrz/FFmpegBin/releases/latest/download/ffmpeg-osx-x64.zip"
             : "https://github.com/Tyrrrz/FFmpegBin/releases/latest/download/ffmpeg-linux-x64.zip",
-            Tool.Aria2 => await GetAria2NextLatestDownloadUrlAsync(cancellationToken),
+            // Tool.Aria2 => await GetAria2NextLatestDownloadUrlAsync(cancellationToken),
+            Tool.TwitchDownloaderCli => await GetTwitchDownloaderCliLatestDownloadUrlAsync(
+                cancellationToken
+            ),
             _ => throw new NotSupportedException($"No download URL configured for '{tool}'."),
         };
 
-    private static string GetYtDlpDownloadUrl()
-    {
-        var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
-
-        if (OperatingSystem.IsWindows())
-            return "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
-
-        if (OperatingSystem.IsMacOS())
-            return "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos";
-
-        return isArm64
-            ? "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_aarch64"
-            : "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp";
-    }
-
-    private static string GetDenoDownloadUrl()
-    {
-        var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
-
-        if (OperatingSystem.IsWindows())
-            return "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip";
-
-        if (OperatingSystem.IsMacOS())
-            return isArm64
-                ? "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-apple-darwin.zip"
-                : "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-apple-darwin.zip";
-
-        return isArm64
-            ? "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-unknown-linux-gnu.zip"
-            : "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip";
-    }
-
-    private async Task<string> GetAria2NextLatestDownloadUrlAsync(
+    private async Task<string> GetTwitchDownloaderCliLatestDownloadUrlAsync(
         CancellationToken cancellationToken
     )
     {
         const string apiUrl =
-            "https://api.github.com/repos/AnInsomniacy/aria2-next/releases/latest";
+            "https://api.github.com/repos/lay295/TwitchDownloader/releases/latest";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
         request.Headers.UserAgent.ParseAdd(RakeConsts.Name);
@@ -440,18 +429,14 @@ public partial class ToolsService : IToolsService
             cancellationToken: cancellationToken
         );
 
-        var platform =
-            OperatingSystem.IsWindows() ? "windows"
-            : OperatingSystem.IsMacOS() ? "macos"
-            : "linux";
+        var platformKeyword =
+            OperatingSystem.IsWindows() ? "Windows"
+            : OperatingSystem.IsMacOS() ? "MacOS"
+            : "Linux";
 
         var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
 
-        var archKeyword = isArm64
-            ? OperatingSystem.IsLinux()
-                ? "aarch64"
-                : "arm64"
-            : "x86_64";
+        var archKeyword = isArm64 ? "Arm64" : "x64";
 
         if (
             json.RootElement.TryGetProperty("assets", out var assets)
@@ -463,12 +448,13 @@ public partial class ToolsService : IToolsService
                 var name = asset.GetProperty("name").GetString();
                 if (
                     string.IsNullOrEmpty(name)
-                    || name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)
+                    || !name.StartsWith("TwitchDownloaderCLI", StringComparison.OrdinalIgnoreCase)
+                    || name.Contains("LinuxAlpine", StringComparison.OrdinalIgnoreCase) // Ignore Alpine
                 )
                     continue;
 
                 if (
-                    name.Contains(platform, StringComparison.OrdinalIgnoreCase)
+                    name.Contains(platformKeyword, StringComparison.OrdinalIgnoreCase)
                     && name.Contains(archKeyword, StringComparison.OrdinalIgnoreCase)
                 )
                 {
@@ -478,9 +464,102 @@ public partial class ToolsService : IToolsService
         }
 
         throw new FileNotFoundException(
-            $"Could not find a valid release asset for aria2-next on platform '{platform}' with architecture '{archKeyword}'."
+            $"Could not find a valid release asset for TwitchDownloaderCLI on platform '{platformKeyword}' with architecture '{archKeyword}'."
         );
     }
+
+    // private static string GetYtDlpDownloadUrl()
+    // {
+    //     var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
+    //
+    //     if (OperatingSystem.IsWindows())
+    //         return "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
+    //
+    //     if (OperatingSystem.IsMacOS())
+    //         return "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos";
+    //
+    //     return isArm64
+    //         ? "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_aarch64"
+    //         : "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp";
+    // }
+    //
+    // private static string GetDenoDownloadUrl()
+    // {
+    //     var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
+    //
+    //     if (OperatingSystem.IsWindows())
+    //         return "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip";
+    //
+    //     if (OperatingSystem.IsMacOS())
+    //         return isArm64
+    //             ? "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-apple-darwin.zip"
+    //             : "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-apple-darwin.zip";
+    //
+    //     return isArm64
+    //         ? "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-unknown-linux-gnu.zip"
+    //         : "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip";
+    // }
+    //
+    // private async Task<string> GetAria2NextLatestDownloadUrlAsync(
+    //     CancellationToken cancellationToken
+    // )
+    // {
+    //     const string apiUrl =
+    //         "https://api.github.com/repos/AnInsomniacy/aria2-next/releases/latest";
+    //
+    //     using var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+    //     request.Headers.UserAgent.ParseAdd(RakeConsts.Name);
+    //
+    //     using var response = await HttpClient.SendAsync(request, cancellationToken);
+    //     response.EnsureSuccessStatusCode();
+    //
+    //     await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+    //     using var json = await JsonDocument.ParseAsync(
+    //         stream,
+    //         cancellationToken: cancellationToken
+    //     );
+    //
+    //     var platform =
+    //         OperatingSystem.IsWindows() ? "windows"
+    //         : OperatingSystem.IsMacOS() ? "macos"
+    //         : "linux";
+    //
+    //     var isArm64 = RuntimeInformation.ProcessArchitecture is Architecture.Arm64;
+    //
+    //     var archKeyword = isArm64
+    //         ? OperatingSystem.IsLinux()
+    //             ? "aarch64"
+    //             : "arm64"
+    //         : "x86_64";
+    //
+    //     if (
+    //         json.RootElement.TryGetProperty("assets", out var assets)
+    //         && assets.ValueKind == JsonValueKind.Array
+    //     )
+    //     {
+    //         foreach (var asset in assets.EnumerateArray())
+    //         {
+    //             var name = asset.GetProperty("name").GetString();
+    //             if (
+    //                 string.IsNullOrEmpty(name)
+    //                 || name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)
+    //             )
+    //                 continue;
+    //
+    //             if (
+    //                 name.Contains(platform, StringComparison.OrdinalIgnoreCase)
+    //                 && name.Contains(archKeyword, StringComparison.OrdinalIgnoreCase)
+    //             )
+    //             {
+    //                 return asset.GetProperty("browser_download_url").GetString() ?? string.Empty;
+    //             }
+    //         }
+    //     }
+    //
+    //     throw new FileNotFoundException(
+    //         $"Could not find a valid release asset for aria2-next on platform '{platform}' with architecture '{archKeyword}'."
+    //     );
+    // }
 
     #endregion
 
@@ -497,12 +576,15 @@ public partial class ToolsService : IToolsService
 
         return tool switch
         {
-            Tool.Deno => isWindows ? "deno.exe" : "deno",
+            // Tool.Deno => isWindows ? "deno.exe" : "deno",
             Tool.FFmpeg => isWindows ? "ffmpeg.exe" : "ffmpeg",
-            Tool.YtDlp => isWindows ? "yt-dlp.exe"
-            : isMac ? "yt-dlp_macos"
-            : "yt-dlp",
-            Tool.Aria2 => isWindows ? "aria2c.exe" : "aria2c",
+            Tool.TwitchDownloaderCli => isWindows
+                ? "TwitchDownloaderCLI.exe"
+                : "TwitchDownloaderCLI",
+            // Tool.YtDlp => isWindows ? "yt-dlp.exe"
+            // : isMac ? "yt-dlp_macos"
+            // : "yt-dlp",
+            // Tool.Aria2 => isWindows ? "aria2c.exe" : "aria2c",
             _ => string.Empty,
         };
     }

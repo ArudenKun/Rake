@@ -1,0 +1,50 @@
+{
+  "data": {
+    "video": {
+      "id": "2772775697",
+      "title": "ladder is weird rn",
+      "status": "RECORDED",
+      "createdAt": "2026-05-15T18:47:01Z",
+      "lengthSeconds": 739,
+      "viewCount": 99,
+      "description": null,
+      "thumbnailURLs": [
+        "https://static-cdn.jtvnw.net/cf_vods/d1m7jfoe9zdc1j/6797282bd850dfc10ae9_braxophone_68270132344_2970498548//thumb/thumb2772775697-320x180.jpg"
+      ],
+      "owner": {
+        "id": "52185583",
+        "displayName": "braxophone",
+        "login": "braxophone"
+      },
+      "game": {
+        "id": "1931693784",
+        "displayName": "Pokémon Champions",
+        "boxArtURL": "https://static-cdn.jtvnw.net/ttv-boxart/1931693784_IGDB-{width}x{height}.jpg"
+      },
+      "moments": {
+        "edges": [
+          {
+            "node": {
+              "id": "",
+              "type": "GAME_CHANGE",
+              "description": "Pokémon Champions",
+              "subDescription": "",
+              "durationMilliseconds": 739000,
+              "positionMilliseconds": 0,
+              "thumbnailURL": null,
+              "moments": null,
+              "video": null,
+              "details": {
+                "game": {
+                  "id": "1931693784",
+                  "displayName": "Pokémon Champions",
+                  "boxArtURL": "https://static-cdn.jtvnw.net/ttv-boxart/1931693784_IGDB-40x53.jpg"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
