@@ -34,10 +34,11 @@ public partial class MainWindowViewModel : ViewModel
     [RelayCommand]
     private async Task ShowExceptionAsync(CancellationToken cancellationToken)
     {
-        Logger.LogInformation("QuickJs Path: {Path}", RakePathConsts.QuickJs);
         Logger.LogInformation("FFmpeg Path: {Path}", RakePathConsts.FFmpeg);
-        Logger.LogInformation("yt-dlp Path: {Path}", RakePathConsts.YtDlp);
-        Logger.LogInformation("Aria2 Path: {Path}", RakePathConsts.Aria2);
+        Logger.LogInformation(
+            "TwitchDownloaderCli Path: {Path}",
+            RakePathConsts.TwitchDownloaderCli
+        );
 
         foreach (var tool in Enum.GetValues<Tool>())
         {

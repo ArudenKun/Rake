@@ -27,6 +27,8 @@ public class App : Application, IDisposable
 
     public required IAbpLazyServiceProvider LazyServiceProvider { get; init; }
 
+    protected ViewLocator ViewLocator => LazyServiceProvider.LazyGetRequiredService<ViewLocator>();
+
     protected ILoggerFactory LoggerFactory =>
         LazyServiceProvider.LazyGetRequiredService<ILoggerFactory>();
 
@@ -40,6 +42,7 @@ public class App : Application, IDisposable
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        DataTemplates.Add(ViewLocator);
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -68,10 +71,11 @@ public class App : Application, IDisposable
 
         // ThemeService.Initialize();
 
-        var mainWindow = LazyServiceProvider.GetRequiredService<MainWindow>();
-        mainWindow.DataContext = LazyServiceProvider.GetRequiredService<MainWindowViewModel>();
+        // var mainWindow = LazyServiceProvider.GetRequiredService<MainWindow>();
+        // mainWindow.DataContext = LazyServiceProvider.GetRequiredService<MainWindowViewModel>();
+        var mainWindow = (Window)
+            ViewLocator.Build(LazyServiceProvider.GetRequiredService<MainWindowViewModel>())!;
         desktop.MainWindow = mainWindow;
-
         mainWindow
             .GetObservable(Window.WindowStateProperty)
             .ToObservable()

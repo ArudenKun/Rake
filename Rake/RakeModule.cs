@@ -85,10 +85,6 @@ public partial class RakeModule : AbpModule
     }
 
     [ScanForTypes(
-        AssignableTo = typeof(Window<>),
-        Handler = nameof(RegisterViewsAndViewModelsHandler)
-    )]
-    [ScanForTypes(
         AssignableTo = typeof(SukiWindow<>),
         Handler = nameof(RegisterViewsAndViewModelsHandler)
     )]

@@ -86,13 +86,4 @@ public static class Program
             await Log.CloseAndFlushAsync();
         }
     }
-
-    // Avalonia configuration, don't remove; also used by visual designer.
-    // ReSharper disable once UnusedMember.Global
-    public static AppBuilder BuildAvaloniaApp() =>
-        AppBuilder.Configure<Application>().UsePlatformDetect()
-#if DEBUG
-        .WithDeveloperTools()
-#endif
-        .LogToTrace();
 }
