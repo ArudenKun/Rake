@@ -1,13 +1,13 @@
-namespace Rake.Core.Twitch;
+namespace Rake.Core.Twitch.Clips;
 
 internal sealed class TwitchClipDownloadOptions
 {
-    public string? Quality { get; init; }
+    public required TwitchClipQuality Quality { get; init; }
     public bool EncodeMetadata { get; init; }
 
     // Callbacks
     public Action? DownloadStarted { get; init; }
-    public Action<double>? DownloadProgress { get; init; }
+    public Action<DownloadProgressArgs>? DownloadProgress { get; init; }
     public Action? DownloadCompleted { get; init; }
 
     public Action? EncodingStarted { get; init; }
@@ -17,12 +17,12 @@ internal sealed class TwitchClipDownloadOptions
 
 public sealed class TwitchClipDownloadOptionsBuilder
 {
-    private string? _quality;
+    private TwitchClipQuality? _quality;
     private bool _encodeMetadata = true;
 
     // Callback fields
     private Action? _downloadStarted;
-    private Action<double>? _downloadProgress;
+    private Action<DownloadProgressArgs>? _downloadProgress;
     private Action? _downloadCompleted;
 
     private Action? _encodingStarted;
@@ -31,7 +31,7 @@ public sealed class TwitchClipDownloadOptionsBuilder
 
     internal TwitchClipDownloadOptionsBuilder() { }
 
-    public TwitchClipDownloadOptionsBuilder WithQuality(string quality)
+    public TwitchClipDownloadOptionsBuilder WithQuality(TwitchClipQuality quality)
     {
         _quality = quality;
         return this;
@@ -51,7 +51,7 @@ public sealed class TwitchClipDownloadOptionsBuilder
         return this;
     }
 
-    public TwitchClipDownloadOptionsBuilder OnDownloadProgress(Action<double> action)
+    public TwitchClipDownloadOptionsBuilder OnDownloadProgress(Action<DownloadProgressArgs> action)
     {
         _downloadProgress = action;
         return this;
@@ -81,8 +81,12 @@ public sealed class TwitchClipDownloadOptionsBuilder
         return this;
     }
 
-    internal TwitchClipDownloadOptions Build() =>
-        new()
+    internal TwitchClipDownloadOptions Build()
+    {
+        if (_quality is null)
+            throw new ArgumentNullException(nameof(_quality), "Quality is required");
+
+        return new TwitchClipDownloadOptions
         {
             Quality = _quality,
             EncodeMetadata = _encodeMetadata,
@@ -93,4 +97,5 @@ public sealed class TwitchClipDownloadOptionsBuilder
             EncodingProgress = _encodingProgress,
             EncodingCompleted = _encodingCompleted,
         };
+    }
 }

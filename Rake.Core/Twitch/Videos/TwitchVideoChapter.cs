@@ -1,6 +1,6 @@
-namespace Rake.Core.Twitch;
+namespace Rake.Core.Twitch.Videos;
 
-public record TwitchMediaChapter(
+public record TwitchVideoChapter(
     string Category,
     string Type,
     int StartSeconds,

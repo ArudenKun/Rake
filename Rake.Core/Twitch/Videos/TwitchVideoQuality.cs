@@ -1,8 +1,8 @@
 using Humanizer;
 
-namespace Rake.Core.Twitch;
+namespace Rake.Core.Twitch.Videos;
 
-public record TwitchVideoStream(
+public record TwitchVideoQuality(
     string Name,
     string Resolution,
     int? Fps,

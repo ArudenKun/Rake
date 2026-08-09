@@ -1,8 +1,8 @@
-namespace Rake.Core.Twitch;
+namespace Rake.Core.Twitch.Videos;
 
 internal sealed class TwitchVideoDownloadOptions
 {
-    public string? Quality { get; init; }
+    public required TwitchVideoQuality Quality { get; init; }
     public TimeSpan? TrimBeginningTime { get; init; }
     public TimeSpan? TrimEndingTime { get; init; }
     public int Threads { get; init; }
@@ -11,7 +11,7 @@ internal sealed class TwitchVideoDownloadOptions
 
     // Callbacks
     public Action? DownloadStarted { get; init; }
-    public Action<double>? DownloadProgress { get; init; }
+    public Action<DownloadProgressArgs>? DownloadProgress { get; init; }
     public Action? DownloadCompleted { get; init; }
 
     public Action? VerifyStarted { get; init; }
@@ -25,7 +25,7 @@ internal sealed class TwitchVideoDownloadOptions
 
 public sealed class TwitchVideoDownloadOptionsBuilder
 {
-    private string? _quality;
+    private TwitchVideoQuality? _quality;
     private TimeSpan? _trimBeginningTime;
     private TimeSpan? _trimEndingTime;
     private int _threads = 4;
@@ -34,7 +34,7 @@ public sealed class TwitchVideoDownloadOptionsBuilder
 
     // Callback fields
     private Action? _downloadStarted;
-    private Action<double>? _downloadProgress;
+    private Action<DownloadProgressArgs>? _downloadProgress;
     private Action? _downloadCompleted;
 
     private Action? _verifyStarted;
@@ -47,7 +47,7 @@ public sealed class TwitchVideoDownloadOptionsBuilder
 
     internal TwitchVideoDownloadOptionsBuilder() { }
 
-    public TwitchVideoDownloadOptionsBuilder WithQuality(string quality)
+    public TwitchVideoDownloadOptionsBuilder WithQuality(TwitchVideoQuality quality)
     {
         _quality = quality;
         return this;
@@ -91,7 +91,7 @@ public sealed class TwitchVideoDownloadOptionsBuilder
         return this;
     }
 
-    public TwitchVideoDownloadOptionsBuilder OnDownloadProgress(Action<double> action)
+    public TwitchVideoDownloadOptionsBuilder OnDownloadProgress(Action<DownloadProgressArgs> action)
     {
         _downloadProgress = action;
         return this;
@@ -139,8 +139,12 @@ public sealed class TwitchVideoDownloadOptionsBuilder
         return this;
     }
 
-    internal TwitchVideoDownloadOptions Build() =>
-        new()
+    internal TwitchVideoDownloadOptions Build()
+    {
+        if (_quality is null)
+            throw new ArgumentNullException(nameof(_quality), "Quality is required");
+
+        return new TwitchVideoDownloadOptions
         {
             Quality = _quality,
             TrimBeginningTime = _trimBeginningTime,
@@ -158,4 +162,5 @@ public sealed class TwitchVideoDownloadOptionsBuilder
             FinalizingProgress = _finalizingProgress,
             FinalizingCompleted = _finalizingCompleted,
         };
+    }
 }

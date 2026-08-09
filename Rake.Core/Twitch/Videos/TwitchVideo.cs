@@ -1,15 +1,15 @@
-namespace Rake.Core.Twitch;
+namespace Rake.Core.Twitch.Videos;
 
-public record TwitchMedia(
+public record TwitchVideo(
     string Title,
-    long Length,
+    long DurationSeconds,
     IReadOnlyList<string> ThumbnailUrls,
     TwitchOwner Owner,
     TwitchGame Game,
     int Views,
     DateTime CreatedAt,
-    IReadOnlyList<TwitchVideoStream> Streams,
-    IReadOnlyList<TwitchMediaChapter> Chapters,
+    IReadOnlyList<TwitchVideoQuality> Qualities,
+    IReadOnlyList<TwitchVideoChapter> Chapters,
     string Description = ""
 )
 {

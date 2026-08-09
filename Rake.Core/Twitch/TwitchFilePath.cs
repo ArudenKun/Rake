@@ -3,13 +3,13 @@ using PowerKit.Extensions;
 
 namespace Rake.Core.Twitch;
 
-public readonly struct TwitchMediaFilePath : IEquatable<TwitchMediaFilePath>
+public readonly struct TwitchFilePath : IEquatable<TwitchFilePath>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="TwitchMediaFilePath"/> struct.
+    /// Initializes a new instance of the <see cref="TwitchFilePath"/> struct.
     /// </summary>
     /// <exception cref="ArgumentException">Thrown when the provided path or URL does not end in .mp4 or .m4a</exception>
-    public TwitchMediaFilePath(string pathOrUrl)
+    public TwitchFilePath(string pathOrUrl)
     {
         Value =
             TryNormalize(pathOrUrl)
@@ -63,14 +63,14 @@ public readonly struct TwitchMediaFilePath : IEquatable<TwitchMediaFilePath>
     /// Attempts to parse the specified string or URL as an .mp4 or .m4a file path.
     /// Returns <see langword="null" /> in case of failure.
     /// </summary>
-    public static TwitchMediaFilePath? TryParse(string? pathOrUrl) =>
-        TryNormalize(pathOrUrl)?.Pipe(path => new TwitchMediaFilePath(path));
+    public static TwitchFilePath? TryParse(string? pathOrUrl) =>
+        TryNormalize(pathOrUrl)?.Pipe(path => new TwitchFilePath(path));
 
     /// <summary>
     /// Parses the specified string or URL as an .mp4 or .m4a file path.
     /// Throws an exception in case of failure.
     /// </summary>
-    public static TwitchMediaFilePath Parse(string pathOrUrl) =>
+    public static TwitchFilePath Parse(string pathOrUrl) =>
         TryParse(pathOrUrl)
         ?? throw new ArgumentException(
             $"Invalid or unsupported media file extension in '{pathOrUrl}'. Only .mp4 and .m4a are allowed."
@@ -79,19 +79,19 @@ public readonly struct TwitchMediaFilePath : IEquatable<TwitchMediaFilePath>
     /// <summary>
     /// Converts string to TwitchMediaFilePath.
     /// </summary>
-    public static implicit operator TwitchMediaFilePath(string pathOrUrl) => Parse(pathOrUrl);
+    public static implicit operator TwitchFilePath(string pathOrUrl) => Parse(pathOrUrl);
 
     /// <summary>
     /// Converts TwitchMediaFilePath to string.
     /// </summary>
-    public static implicit operator string(TwitchMediaFilePath file) => file.ToString();
+    public static implicit operator string(TwitchFilePath file) => file.ToString();
 
     /// <inheritdoc />
-    public bool Equals(TwitchMediaFilePath other) =>
+    public bool Equals(TwitchFilePath other) =>
         string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is TwitchMediaFilePath other && Equals(other);
+    public override bool Equals(object? obj) => obj is TwitchFilePath other && Equals(other);
 
     /// <inheritdoc />
     public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(Value);
@@ -99,10 +99,8 @@ public readonly struct TwitchMediaFilePath : IEquatable<TwitchMediaFilePath>
     /// <summary>
     /// Equality check.
     /// </summary>
-    public static bool operator ==(TwitchMediaFilePath left, TwitchMediaFilePath right) =>
-        left.Equals(right);
+    public static bool operator ==(TwitchFilePath left, TwitchFilePath right) => left.Equals(right);
 
-    /// <inheritdoc cref="operator ==(TwitchMediaFilePath, TwitchMediaFilePath)" />
-    public static bool operator !=(TwitchMediaFilePath left, TwitchMediaFilePath right) =>
-        !(left == right);
+    /// <inheritdoc cref="operator ==(TwitchFilePath, TwitchFilePath)" />
+    public static bool operator !=(TwitchFilePath left, TwitchFilePath right) => !(left == right);
 }
