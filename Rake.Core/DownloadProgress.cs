@@ -49,7 +49,7 @@ public class DownloadProgress : IProgress<double>
         _bandwidth.CalculateSpeed(bytesDelta);
         _lastBytesRead = currentBytes;
 
-        _onProgressReported.Invoke(
+        _onProgressReported(
             new DownloadProgressArgs(
                 Percentage.FromFraction(progress),
                 _bandwidth.Speed,

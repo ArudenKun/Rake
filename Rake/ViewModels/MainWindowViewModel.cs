@@ -95,7 +95,6 @@ public partial class MainWindowViewModel : ViewModel
             )
                 .SetContainer(Container.Mp4)
                 .SetFFmpegPath(ToolsService.GetPath(Tool.FFmpeg))
-                .SetPreset(ConversionPreset.Medium)
                 .Build(),
             progress,
             cancellationToken
