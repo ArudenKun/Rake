@@ -17,21 +17,37 @@ internal static class StringExtensions
         Title,
         Camel,
         Pascal,
+        Underscore,
+        Kebab,
+        Lower,
     }
 
-    public static string ToTitleCase(this string source) => source.SafeName(Case.Title);
+    public static string Titlelize(this string source) => source.SafeName(Case.Title);
 
-    public static string ToCamelCase(this string source) => source.SafeName(Case.Camel);
+    // Humanizer-style extension methods
+    public static string Underscore(this string source) => source.SafeName(Case.Underscore);
 
-    public static string ToPascalCase(this string source) => source.SafeName(Case.Pascal);
+    public static string Pascalize(this string source) => source.SafeName(Case.Pascal);
+
+    public static string Camelize(this string source) => source.SafeName(Case.Camel);
+
+    public static string Kebaberize(this string source) => source.SafeName(Case.Kebab);
+
+    public static string Lower(this string source) => source.SafeName(Case.Lower);
 
     private static string SafeName(this string source, Case @case)
     {
+        if (string.IsNullOrEmpty(source))
+            return source;
+
         return @case switch
         {
             Case.Title => SafeCase(" ", UppercaseFirstChar),
             Case.Camel => SafeCase("", LowercaseFirstWord),
             Case.Pascal => SafeCase("", UppercaseFirstChar),
+            Case.Underscore => SafeCase("_", LowercaseAllChars),
+            Case.Kebab => SafeCase("-", LowercaseAllChars),
+            Case.Lower => source.ToLowerInvariant(),
             _ => throw new NotImplementedException($"Unknown {nameof(Case)}: {@case}"),
         };
 
@@ -48,6 +64,8 @@ internal static class StringExtensions
         }
 
         static char UppercaseFirstChar(string x, int _ = 0) => char.ToUpperInvariant(x[0]);
+
+        static char LowercaseAllChars(string x, int _ = 0) => char.ToLowerInvariant(x[0]);
 
         // ReSharper disable once UnusedParameter.Local
         static char LowercaseFirstChar(string x, int _ = 0) => char.ToLowerInvariant(x[0]);

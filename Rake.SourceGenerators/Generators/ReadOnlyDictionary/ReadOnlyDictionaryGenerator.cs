@@ -1,7 +1,6 @@
-using Humanizer;
 using Rake.SourceGenerators.Abstractions;
 using Rake.SourceGenerators.Attributes;
-using Rake.SourceGenerators.Core;
+using Rake.SourceGenerators.Builder;
 using Rake.SourceGenerators.Extensions;
 
 namespace Rake.SourceGenerators.Generators.ReadOnlyDictionary;
@@ -20,8 +19,7 @@ internal class ReadOnlyDictionaryGenerator
     {
         var builder = CodeBuilder.Create(symbol);
 
-        // Read options from attribute named arguments
-        var generatorOptions = ParseAttributeOptions(attribute);
+        var model = attribute.GetReadOnlyDictionaryAttributeModel();
 
         var properties = symbol
             .GetMembers()
@@ -34,9 +32,7 @@ internal class ReadOnlyDictionaryGenerator
         // Map all properties to their deduplicated string aliases based on options
         var processedCases = new HashSet<string>();
         var aliasMap = properties
-            .Select(p =>
-                (Property: p, Aliases: GetUniqueAliases(p, generatorOptions, processedCases))
-            )
+            .Select(p => (Property: p, Aliases: GetUniqueAliases(p, model, processedCases)))
             .Where(x => x.Aliases.Length > 0)
             .ToArray();
 
@@ -172,54 +168,16 @@ internal class ReadOnlyDictionaryGenerator
         return (code, null);
     }
 
-    private static AttributeOptions ParseAttributeOptions(AttributeData attribute)
-    {
-        var options = new AttributeOptions();
-
-        foreach (var namedArg in attribute.NamedArguments)
-        {
-            if (namedArg.Value.Value is not bool boolValue)
-                continue;
-
-            switch (namedArg.Key)
-            {
-                case nameof(AttributeOptions.IncludeJsonPropertyNameAttribute):
-                    options.IncludeJsonPropertyNameAttribute = boolValue;
-                    break;
-                case nameof(AttributeOptions.IncludeUnderscore):
-                    options.IncludeUnderscore = boolValue;
-                    break;
-                case nameof(AttributeOptions.IncludePascalize):
-                    options.IncludePascalize = boolValue;
-                    break;
-                case nameof(AttributeOptions.IncludeCamelize):
-                    options.IncludeCamelize = boolValue;
-                    break;
-                case nameof(AttributeOptions.IncludeKebaberize):
-                    options.IncludeKebaberize = boolValue;
-                    break;
-                case nameof(AttributeOptions.IncludeUpper):
-                    options.IncludeUpper = boolValue;
-                    break;
-                case nameof(AttributeOptions.IncludeLower):
-                    options.IncludeLower = boolValue;
-                    break;
-            }
-        }
-
-        return options;
-    }
-
     private static string[] GetUniqueAliases(
         IPropertySymbol property,
-        AttributeOptions options,
+        ReadOnlyDictionaryAttribute.Model model,
         HashSet<string> processedCases
     )
     {
         var originalName = property.Name;
         var aliases = new List<string>();
 
-        if (options.IncludeJsonPropertyNameAttribute)
+        if (model.IncludeJsonPropertyNameAttribute)
         {
             foreach (var attr in property.GetAttributes())
             {
@@ -239,30 +197,19 @@ internal class ReadOnlyDictionaryGenerator
         // Original property name is always included as the primary key
         aliases.Add(originalName);
 
-        if (options.IncludeUnderscore)
+        if (model.IncludeUnderscore)
             aliases.Add(originalName.Underscore());
-        if (options.IncludePascalize)
+        if (model.IncludePascalize)
             aliases.Add(originalName.Pascalize());
-        if (options.IncludeCamelize)
+        if (model.IncludeCamelize)
             aliases.Add(originalName.Camelize());
-        if (options.IncludeKebaberize)
+        if (model.IncludeKebaberize)
             aliases.Add(originalName.Kebaberize());
-        if (options.IncludeLower)
+        if (model.IncludeLower)
             aliases.Add(originalName.ToLowerInvariant());
-        if (options.IncludeUpper)
+        if (model.IncludeUpper)
             aliases.Add(originalName.ToUpperInvariant());
 
         return [.. aliases.Where(processedCases.Add)];
-    }
-
-    private sealed class AttributeOptions
-    {
-        public bool IncludeJsonPropertyNameAttribute { get; set; }
-        public bool IncludeUnderscore { get; set; }
-        public bool IncludePascalize { get; set; }
-        public bool IncludeCamelize { get; set; }
-        public bool IncludeKebaberize { get; set; }
-        public bool IncludeUpper { get; set; }
-        public bool IncludeLower { get; set; }
     }
 }

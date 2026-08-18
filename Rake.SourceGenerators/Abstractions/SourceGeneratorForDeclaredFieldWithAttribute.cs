@@ -3,7 +3,7 @@
 internal abstract class SourceGeneratorForDeclaredFieldWithAttribute
     : SourceGeneratorForDeclaredMemberWithAttribute<FieldDeclarationSyntax>
 {
-    protected SourceGeneratorForDeclaredFieldWithAttribute(string attributeType)
+    protected SourceGeneratorForDeclaredFieldWithAttribute(Type attributeType)
         : base(attributeType) { }
 
     protected abstract (string GeneratedCode, DiagnosticDetail Error) GenerateCode(

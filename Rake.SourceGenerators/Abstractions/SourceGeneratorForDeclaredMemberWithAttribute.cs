@@ -11,17 +11,20 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
     where TDeclarationSyntax : MemberDeclarationSyntax
 {
     protected SourceGeneratorForDeclaredMemberWithAttribute()
-        : base(typeof(TAttribute).Name) { }
+        : base(typeof(TAttribute)) { }
 }
 
 public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TDeclarationSyntax>
     : IIncrementalGenerator
     where TDeclarationSyntax : MemberDeclarationSyntax
 {
-    protected SourceGeneratorForDeclaredMemberWithAttribute(string attributeType)
+    private readonly Type _attributeType;
+
+    protected SourceGeneratorForDeclaredMemberWithAttribute(Type attributeType)
     {
-        AttributeType = attributeType.AddSuffix("Attribute");
-        AttributeName = attributeType.TrimSuffix("Attribute");
+        _attributeType = attributeType;
+        AttributeType = attributeType.Name.AddSuffix("Attribute");
+        AttributeName = attributeType.Name.TrimSuffix("Attribute");
     }
 
     protected string AttributeType { get; }
@@ -34,6 +37,14 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TDeclaration
     {
         foreach (var (name, source) in StaticSources)
             context.RegisterPostInitializationOutput(x => x.AddSource($"{name}.g.cs", source));
+
+        var attributeSourceNameFieldInfo = _attributeType.GetField("SourceName");
+        var attributeSourceTextFieldInfo = _attributeType.GetField("SourceText");
+        string sourceName = (string)attributeSourceNameFieldInfo.GetValue(null);
+        string sourceText = (string)attributeSourceTextFieldInfo.GetValue(null);
+        context.RegisterPostInitializationOutput(x =>
+            x.AddSource($"{sourceName}.a.g.cs", sourceText)
+        );
 
         var syntaxProvider = context.SyntaxProvider.CreateSyntaxProvider(
             IsSyntaxTarget,

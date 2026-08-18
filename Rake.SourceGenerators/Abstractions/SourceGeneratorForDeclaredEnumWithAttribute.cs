@@ -3,7 +3,7 @@
 internal abstract class SourceGeneratorForDeclaredEnumWithAttribute
     : SourceGeneratorForDeclaredMemberWithAttribute<EnumDeclarationSyntax>
 {
-    protected SourceGeneratorForDeclaredEnumWithAttribute(string attributeType)
+    protected SourceGeneratorForDeclaredEnumWithAttribute(Type attributeType)
         : base(attributeType) { }
 
     protected abstract (string GeneratedCode, DiagnosticDetail Error) GenerateCode(

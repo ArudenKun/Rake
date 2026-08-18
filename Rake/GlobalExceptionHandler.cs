@@ -51,13 +51,13 @@ public static class GlobalExceptionHandler
     /// </summary>
     public static void Show(Exception exception) => Report(exception);
 
-    static void OnAppDomainUnhandled(object sender, UnhandledExceptionEventArgs e)
+    private static void OnAppDomainUnhandled(object sender, UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is Exception ex)
             Report(ex);
     }
 
-    static void OnUnobservedTask(object? sender, UnobservedTaskExceptionEventArgs e)
+    private static void OnUnobservedTask(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         if (sender is ViewModel)
             return;
@@ -69,13 +69,16 @@ public static class GlobalExceptionHandler
         Report(e.Exception);
     }
 
-    static void OnDispatcherUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)
+    private static void OnDispatcherUnhandled(
+        object sender,
+        DispatcherUnhandledExceptionEventArgs e
+    )
     {
         Report(e.Exception);
         e.Handled = true;
     }
 
-    static void Report(Exception exception)
+    private static void Report(Exception exception)
     {
         Debug.WriteLine(exception.ToString());
         _logger?.LogException(exception);
@@ -106,7 +109,7 @@ public static class GlobalExceptionHandler
         }
     }
 
-    static void ShowDialog(Exception exception)
+    private static void ShowDialog(Exception exception)
     {
         // Marshal to the UI thread; nested calls during shutdown may not have a dispatcher,
         // in which case Debug.WriteLine above is the only signal we can offer.
@@ -167,7 +170,7 @@ public static class GlobalExceptionHandler
             window.Show();
     }
 
-    static (Control root, TextBox details) BuildContent(
+    private static (Control root, TextBox details) BuildContent(
         Exception exception,
         Window window,
         string clipboardText
@@ -255,7 +258,7 @@ public static class GlobalExceptionHandler
         return (grid, details);
     }
 
-    static string FormatForClipboard(Exception exception)
+    private static string FormatForClipboard(Exception exception)
     {
         var text =
             exception.GetType().FullName
@@ -266,7 +269,7 @@ public static class GlobalExceptionHandler
         return text;
     }
 
-    static async Task CopyToClipboardAsync(Window window, string text)
+    private static async Task CopyToClipboardAsync(Window window, string text)
     {
         var clipboard = TopLevel.GetTopLevel(window)?.Clipboard;
         if (clipboard is null)

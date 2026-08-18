@@ -3,7 +3,7 @@
 internal abstract class SourceGeneratorForDeclaredPropertyWithAttribute
     : SourceGeneratorForDeclaredMemberWithAttribute<PropertyDeclarationSyntax>
 {
-    protected SourceGeneratorForDeclaredPropertyWithAttribute(string attributeType)
+    protected SourceGeneratorForDeclaredPropertyWithAttribute(Type attributeType)
         : base(attributeType) { }
 
     protected abstract (string GeneratedCode, DiagnosticDetail Error) GenerateCode(

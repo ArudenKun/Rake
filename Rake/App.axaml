@@ -2,10 +2,15 @@
   x:Class="Rake.App"
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:rake="clr-namespace:Rake"
   xmlns:suki="https://github.com/kikipoulet/SukiUI"
   RequestedThemeVariant="Default"
 >
   <Application.Styles>
     <suki:SukiTheme ThemeColor="Blue" />
   </Application.Styles>
+
+  <Application.Resources>
+    <rake:ViewModelLocator x:Key="Locator" />
+  </Application.Resources>
 </Application>

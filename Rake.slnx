@@ -6,8 +6,7 @@
   <Project Path="Rake.ConsoleTest/Rake.ConsoleTest.csproj" />
   <Project Path="Rake.Core/Rake.Core.csproj" />
   <Project Path="Rake.Hosting/Rake.Hosting.csproj" />
-  <Project Path="Rake.SourceGenerators.Attributes/Rake.SourceGenerators.Attributes.csproj" />
-  <Project Path="Rake.SourceGenerators.Core/Rake.SourceGenerators.Core.csproj" />
+  <Project Path="Rake.SourceGenerators.UtilityGenerator/Rake.SourceGenerators.UtilityGenerator.csproj" />
   <Project Path="Rake.SourceGenerators/Rake.SourceGenerators.csproj" />
   <Project Path="Rake/Rake.csproj" />
 </Solution>
