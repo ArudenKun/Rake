@@ -65,7 +65,11 @@ public class App : Application, IDisposable
         if (!_resourceMutex.IsLocked)
         {
             Logger.LogInformation("Another instance is already running");
+#pragma warning disable VSTHRD105
+#pragma warning disable VSTHRD110
             _ipcBroker.SignalRunningInstanceAsync().ContinueWith(_ => desktop.TryShutdown());
+#pragma warning restore VSTHRD110
+#pragma warning restore VSTHRD105
             return;
         }
 

@@ -1,9 +1,9 @@
 ﻿using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.VisualStudio.Threading;
 using Rake.Hosting.Internals;
 using Volo.Abp;
-using Volo.Abp.DependencyInjection;
 using Volo.Abp.Modularity;
 
 namespace Rake.Hosting;
@@ -13,44 +13,60 @@ namespace Rake.Hosting;
 /// </summary>
 public static class HostApplicationBuilderExtensions
 {
-    public static async Task AddApplicationAsync<TApplication, TStartupModule>(
-        this IHostApplicationBuilder builder,
-        Action<AppBuilder> appBuilderAction,
-        Action<AbpApplicationCreationOptions>? optionsAction = null
-    )
-        where TApplication : Application
-        where TStartupModule : IAbpModule
+    extension(IHostApplicationBuilder builder)
     {
-        builder
-            .Services.AddSingleton<TApplication>()
-            .AddSingleton<Application>(sp => sp.GetRequiredService<TApplication>())
-            .AddSingleton(sp =>
+        public void AddAvalonia<TApplication>(Action<AppBuilder> appBuilderAction)
+            where TApplication : Application =>
+            builder
+                .Services.AddSingleton<TApplication>()
+                .AddSingleton<Application>(sp => sp.GetRequiredService<TApplication>())
+                .AddSingleton(sp =>
+                {
+                    var appBuilder = AppBuilder.Configure(sp.GetRequiredService<TApplication>);
+                    appBuilderAction(appBuilder);
+                    return appBuilder;
+                })
+                .AddSingleton<AvaloniaThread>()
+                .AddHostedService<AvaloniaHostedService>();
+
+        public void AddAvaloniaThreadSwitching() =>
+            builder
+                .Services.AddSingleton<JoinableTaskContext>(provider =>
+                {
+                    var avaloniaThread = provider.GetRequiredService<AvaloniaThread>();
+                    return new JoinableTaskContext(
+                        avaloniaThread.UiThread,
+                        avaloniaThread.SynchronizationContext
+                    );
+                })
+                .AddSingleton<JoinableTaskFactory>();
+
+        public void AddApplication<TStartupModule>(
+            Action<AbpApplicationCreationOptions>? optionsAction = null
+        )
+            where TStartupModule : IAbpModule =>
+            builder.Services.AddApplication<TStartupModule>(options =>
             {
-                var appBuilder = AppBuilder.Configure(sp.GetRequiredService<TApplication>);
-                appBuilderAction(appBuilder);
-                return appBuilder;
-            })
-            .AddSingleton<AvaloniaThread>()
-            .AddHostedService<AvaloniaHostedService>();
+                options.Services.ReplaceConfiguration(builder.Configuration);
+                optionsAction?.Invoke(options);
+                if (options.Environment.IsNullOrWhiteSpace())
+                {
+                    options.Environment = builder.Environment.EnvironmentName;
+                }
+            });
 
-        await builder.Services.AddApplicationAsync<TStartupModule>(options =>
-        {
-            options.Services.ReplaceConfiguration(builder.Configuration);
-            optionsAction?.Invoke(options);
-            if (options.Environment.IsNullOrWhiteSpace())
+        public async Task AddApplicationAsync<TStartupModule>(
+            Action<AbpApplicationCreationOptions>? optionsAction = null
+        )
+            where TStartupModule : IAbpModule =>
+            await builder.Services.AddApplicationAsync<TStartupModule>(options =>
             {
-                options.Environment = builder.Environment.EnvironmentName;
-            }
-        });
-    }
-
-    public static async Task InitializeApplicationAsync(this IHost host)
-    {
-        Check.NotNull(host, nameof(host));
-
-        host.Services.GetRequiredService<ObjectAccessor<IHost>>().Value = host;
-        var application =
-            host.Services.GetRequiredService<IAbpApplicationWithExternalServiceProvider>();
-        await application.InitializeAsync(host.Services);
+                options.Services.ReplaceConfiguration(builder.Configuration);
+                optionsAction?.Invoke(options);
+                if (options.Environment.IsNullOrWhiteSpace())
+                {
+                    options.Environment = builder.Environment.EnvironmentName;
+                }
+            });
     }
 }

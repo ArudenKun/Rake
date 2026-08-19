@@ -5,8 +5,6 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Volo.Abp;
-using Volo.Abp.Threading;
 
 namespace Rake.Hosting.Internals;
 
@@ -20,6 +18,8 @@ internal sealed class AvaloniaThread
     private readonly IHostApplicationLifetime _applicationLifetime;
     private readonly TaskCompletionSource<object> _applicationExited = new();
     private readonly TaskCompletionSource<object> _applicationStarted = new();
+
+    private SynchronizationContext? _synchronizationContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AvaloniaThread"/> class.
@@ -40,6 +40,12 @@ internal sealed class AvaloniaThread
         }
     }
 
+    internal Thread UiThread => _uiThread;
+
+    internal SynchronizationContext SynchronizationContext =>
+        _synchronizationContext
+        ?? throw new InvalidOperationException("Avalonia Thread was not started");
+
     /// <summary>
     /// Starts the Avalonia thread.
     /// The task completes when <see cref="IControlledApplicationLifetime.Startup"/> event fires.
@@ -56,16 +62,16 @@ internal sealed class AvaloniaThread
     /// </summary>
     public Task StopAsync(CancellationToken token)
     {
+#pragma warning disable VSTHRD110
         Dispatcher.UIThread.InvokeAsync(() =>
         {
             if (
                 Application.Current?.ApplicationLifetime
                 is ClassicDesktopStyleApplicationLifetime desktop
             )
-            {
                 desktop.TryShutdown();
-            }
         });
+#pragma warning restore VSTHRD110
         return _applicationExited.Task.WaitAsync(token);
     }
 
@@ -76,31 +82,32 @@ internal sealed class AvaloniaThread
     {
         try
         {
-            var application =
-                _serviceProvider.GetRequiredService<IAbpApplicationWithExternalServiceProvider>();
+            var synchronizationContext = new AvaloniaSynchronizationContext();
+            SynchronizationContext.SetSynchronizationContext(synchronizationContext);
+            _synchronizationContext = synchronizationContext;
+
             var appBuilder = _serviceProvider.GetRequiredService<AppBuilder>();
             appBuilder.StartWithClassicDesktopLifetime(
                 [],
                 desktop =>
                 {
                     desktop.Startup += (_, _) => _applicationStarted.SetResult(null!);
-                    desktop.ShutdownRequested += (_, _) =>
-                    {
-                        // ReSharper disable once AccessToDisposedClosure
-                        AsyncHelper.RunSync(application.ShutdownAsync);
-                    };
-                    desktop.Exit += (_, _) =>
-                    {
-                        _applicationExited.TrySetResult(null!);
-                        // ReSharper disable once AccessToDisposedClosure
-                        application.Dispose();
-                        _applicationLifetime.StopApplication();
-                    };
+                    // desktop.ShutdownRequested += (_, _) =>
+                    // {
+                    //     // ReSharper disable once AccessToDisposedClosure
+                    //     AsyncHelper.RunSync(application.ShutdownAsync);
+                    // };
+                    // desktop.Exit += (_, _) =>
+                    // {
+                    //     _applicationExited.TrySetResult(null!);
+                    //     // ReSharper disable once AccessToDisposedClosure
+                    //     application.Dispose();
+                    //     _applicationLifetime.StopApplication();
+                    // };
                 }
             );
             // Avalonia stopped.
             _applicationExited.TrySetResult(null!);
-            application.Dispose();
             _applicationLifetime.StopApplication();
         }
         catch (Exception e)

@@ -119,14 +119,15 @@ the code is regenerated.";
         return this;
     }
 
-    public ClassBuilder AddClass(string name)
+    public ClassBuilder AddClass(string name, bool partial = true)
     {
-        var builder = new ClassBuilder(name, this);
+        var builder = new ClassBuilder(name, this, partial);
         _builders.Add(builder);
         return builder;
     }
 
-    public ClassBuilder AddClass(ITypeSymbol symbol) => AddClass(symbol.Name);
+    public ClassBuilder AddClass(ITypeSymbol symbol, bool partial = true) =>
+        AddClass(symbol.Name, partial);
 
     internal ClassBuilder AddClass(ClassBuilder builder)
     {

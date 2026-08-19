@@ -8,6 +8,7 @@ using AsyncNavigation.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.Threading;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Local;
@@ -31,6 +32,9 @@ public abstract partial class ViewModel
     }
 
     public required IAbpLazyServiceProvider LazyServiceProvider { protected get; init; }
+
+    protected JoinableTaskFactory JoinableTaskFactory =>
+        LazyServiceProvider.LazyGetRequiredService<JoinableTaskFactory>();
 
     protected ILoggerFactory LoggerFactory =>
         LazyServiceProvider.LazyGetRequiredService<ILoggerFactory>();
@@ -62,6 +66,7 @@ public abstract partial class ViewModel
         bool showException = true
     )
     {
+        await JoinableTaskFactory.SwitchToMainThreadAsync();
         IsBusy = true;
         IsBusyText = busyText;
         try
@@ -82,15 +87,11 @@ public abstract partial class ViewModel
     protected bool LogException(Exception? ex, bool shouldCatch = false, bool shouldDisplay = false)
     {
         if (ex is null)
-        {
             return shouldCatch;
-        }
 
         Logger.LogException(ex);
         if (shouldDisplay)
-        {
             GlobalExceptionHandler.Show(ex);
-        }
 
         return shouldCatch;
     }
@@ -143,7 +144,7 @@ public abstract partial class ViewModel
     /// Raise this event to request that the framework proactively removes this view from the region.
     /// Use <see cref="RequestUnloadAsync"/> as a convenient helper to raise it.
     /// </remarks>
-    public event AsyncEventHandler<AsyncEventArgs>? AsyncRequestUnloadEvent;
+    public event AsyncNavigation.Core.AsyncEventHandler<AsyncEventArgs>? AsyncRequestUnloadEvent;
 
     /// <summary>
     /// Raises <see cref="AsyncRequestUnloadEvent"/> to request that the framework remove this view.

@@ -4,7 +4,7 @@ namespace Rake.SourceGenerators.Attributes;
 
 [GenerateFactory]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed partial class ReadOnlyDictionaryAttribute : Attribute
+internal sealed partial class ReadOnlyDictionaryAttribute : Attribute
 {
     public bool IncludeJsonPropertyNameAttribute { get; set; } = false;
     public bool IncludeUnderscore { get; set; } = false;

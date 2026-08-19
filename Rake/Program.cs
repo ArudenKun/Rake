@@ -56,7 +56,7 @@ public static class Program
                         .Enrich.FromLogContext()
                         .Enrich.WithDemystifiedStackTraces()
             );
-            await builder.AddApplicationAsync<App, RakeModule>(appBuilder =>
+            builder.AddAvalonia<App>(appBuilder =>
                 appBuilder
                     .UseR3(ex => Log.Error(ex, "[R3] Unhandled Exception"))
                     .UsePlatformDetect()
@@ -66,6 +66,8 @@ public static class Program
                     .LogToTrace()
                     .LogToSerilog()
             );
+            builder.AddAvaloniaThreadSwitching();
+            await builder.AddApplicationAsync<RakeModule>();
             var host = builder.Build();
             await host.InitializeApplicationAsync();
             await host.RunAsync();

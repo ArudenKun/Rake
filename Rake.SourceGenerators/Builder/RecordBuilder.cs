@@ -1,15 +1,11 @@
 using Rake.SourceGenerators.Builder.Internals;
 
-#pragma warning disable IDE0079
-#pragma warning disable IDE0090
-#pragma warning disable IDE1006
-#nullable enable
 namespace Rake.SourceGenerators.Builder;
 
 public sealed class RecordBuilder : BuilderBase<RecordBuilder>
 {
-    private readonly List<RecordPropertyBuilder> _properties = new List<RecordPropertyBuilder>();
-    private readonly List<string> _attributes = new List<string>();
+    private readonly List<RecordPropertyBuilder> _properties = [];
+    private readonly List<string> _attributes = [];
     private DocumentationComment? _xmlDoc;
 
     internal RecordBuilder(string name, CodeBuilder codeBuilder)

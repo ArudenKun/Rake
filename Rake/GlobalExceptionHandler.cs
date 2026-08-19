@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
@@ -44,11 +45,6 @@ public static class GlobalExceptionHandler
         _isInstalled = true;
     }
 
-    /// <summary>
-    /// Surfaces <paramref name="exception"/> through the same UI as an unhandled exception.
-    /// Lets call sites that swallow exceptions in a fire-and-forget continuation still report
-    /// them through the standard dialog.
-    /// </summary>
     public static void Show(Exception exception) => Report(exception);
 
     private static void OnAppDomainUnhandled(object sender, UnhandledExceptionEventArgs e)
@@ -59,13 +55,17 @@ public static class GlobalExceptionHandler
 
     private static void OnUnobservedTask(object? sender, UnobservedTaskExceptionEventArgs e)
     {
+        // Ignore cancellations triggered by MVVM Toolkit AsyncRelayCommand or token teardowns
+        if (IsCancellationException(e.Exception))
+        {
+            e.SetObserved();
+            return;
+        }
+
         if (sender is ViewModel)
             return;
 
         e.SetObserved();
-        // The Linux DBus failures arrive here: a fire-and-forget Tmds.DBus call faults and the
-        // AggregateException is rethrown by the finalizer. Log the unwrapped chain plus the
-        // recent input trail so the triggering gesture can be read off (ILSPY_LOG=DBUSDEBUG).
         Report(e.Exception);
     }
 
@@ -74,34 +74,34 @@ public static class GlobalExceptionHandler
         DispatcherUnhandledExceptionEventArgs e
     )
     {
+        // Suppress TaskCanceledException/OperationCanceledException from bubbling up to UI dialog
+        if (IsCancellationException(e.Exception))
+        {
+            e.Handled = true;
+            return;
+        }
+
         Report(e.Exception);
         e.Handled = true;
     }
 
     private static void Report(Exception exception)
     {
-        Debug.WriteLine(exception.ToString());
-        _logger?.LogException(exception);
-        for (var ex = exception; ex != null; ex = ex.InnerException)
-        {
-            if (
-                ex is ReflectionTypeLoadException { LoaderExceptions.Length: > 0 } loadException
-                && loadException.LoaderExceptions[0] is { } loader
-            )
-            {
-                exception = loader;
-                Debug.WriteLine(exception.ToString());
-                _logger?.LogException(exception);
-                break;
-            }
-        }
+        // Filter out direct or unwrapped OperationCanceledException/TaskCanceledException
+        var unwrapped = UnwrapException(exception);
+        if (IsCancellationException(unwrapped))
+            return;
+
+        Debug.WriteLine(unwrapped.ToString());
+        _logger?.LogException(unwrapped);
 
         if (_showingError)
             return;
+
         _showingError = true;
         try
         {
-            ShowDialog(exception);
+            ShowDialog(unwrapped);
         }
         finally
         {
@@ -109,10 +109,51 @@ public static class GlobalExceptionHandler
         }
     }
 
+    private static Exception UnwrapException(Exception exception)
+    {
+        var current = exception;
+
+        // Unwrap AggregateException if it contains a inner concrete exception
+        if (current is AggregateException { InnerExceptions.Count: 1 } aggErr)
+        {
+            current = aggErr.InnerException!;
+        }
+
+        for (var ex = current; ex != null; ex = ex.InnerException)
+        {
+            if (
+                ex is ReflectionTypeLoadException { LoaderExceptions.Length: > 0 } loadException
+                && loadException.LoaderExceptions[0] is { } loader
+            )
+            {
+                return loader;
+            }
+        }
+
+        return current;
+    }
+
+    private static bool IsCancellationException(Exception? ex)
+    {
+        if (ex is null)
+            return false;
+
+        if (ex is OperationCanceledException or TaskCanceledException)
+            return true;
+
+        if (ex is AggregateException agg)
+        {
+            return agg.InnerExceptions.Count > 0
+                && agg.InnerExceptions.All(e =>
+                    e is OperationCanceledException or TaskCanceledException
+                );
+        }
+
+        return false;
+    }
+
     private static void ShowDialog(Exception exception)
     {
-        // Marshal to the UI thread; nested calls during shutdown may not have a dispatcher,
-        // in which case Debug.WriteLine above is the only signal we can offer.
         if (!Dispatcher.UIThread.CheckAccess())
         {
             try
@@ -136,9 +177,7 @@ public static class GlobalExceptionHandler
         var clipboardText = FormatForClipboard(exception);
         var (root, details) = BuildContent(exception, window, clipboardText);
         window.Content = root;
-        // Match the Win32 MessageBox keyboard contract: Ctrl+C copies the whole report,
-        // Esc dismisses the dialog. Skip the whole-text copy when the user has a selection
-        // inside the details TextBox so the standard text-selection copy wins.
+
         window.KeyBindings.Add(
             new KeyBinding
             {
@@ -165,7 +204,9 @@ public static class GlobalExceptionHandler
             owner = desktop.MainWindow;
 
         if (owner is { IsVisible: true })
+#pragma warning disable VSTHRD110
             window.ShowDialog(owner);
+#pragma warning restore VSTHRD110
         else
             window.Show();
     }
@@ -176,8 +217,6 @@ public static class GlobalExceptionHandler
         string clipboardText
     )
     {
-        // For DBus failures the bare ToString() hides the ServiceUnknown/ErrorName detail inside
-        // nested aggregates; append the fully unwrapped chain so the dialog carries it too.
         var detailText = exception.ToString();
         var details = new TextBox
         {
@@ -260,13 +299,11 @@ public static class GlobalExceptionHandler
 
     private static string FormatForClipboard(Exception exception)
     {
-        var text =
-            exception.GetType().FullName
+        return exception.GetType().FullName
             + ": "
             + exception.Message
             + Environment.NewLine
             + exception;
-        return text;
     }
 
     private static async Task CopyToClipboardAsync(Window window, string text)

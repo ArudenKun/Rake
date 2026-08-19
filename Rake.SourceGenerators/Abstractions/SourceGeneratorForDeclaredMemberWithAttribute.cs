@@ -18,13 +18,14 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TDeclaration
     : IIncrementalGenerator
     where TDeclarationSyntax : MemberDeclarationSyntax
 {
-    private readonly Type _attributeType;
+    private readonly List<(string Name, string Source)> _attributeStaticSources = [];
 
     protected SourceGeneratorForDeclaredMemberWithAttribute(Type attributeType)
     {
-        _attributeType = attributeType;
         AttributeType = attributeType.Name.AddSuffix("Attribute");
         AttributeName = attributeType.Name.TrimSuffix("Attribute");
+
+        AddAttribute(attributeType);
     }
 
     protected string AttributeType { get; }
@@ -33,18 +34,23 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TDeclaration
 
     protected virtual IEnumerable<(string Name, string Source)> StaticSources => [];
 
+    protected void AddAttribute<TAttribute>() => AddAttribute(typeof(TAttribute));
+
+    protected void AddAttribute(Type type)
+    {
+        var sourceName = type.GetStaticFieldValue<string>("SourceName")!;
+        var sourceText = type.GetStaticFieldValue<string>("SourceText")!;
+        _attributeStaticSources.Add((sourceName, sourceText));
+    }
+
     public void Initialize(GeneratorContext context)
     {
-        foreach (var (name, source) in StaticSources)
+        foreach (
+            var (name, source) in StaticSources
+                .Concat(_attributeStaticSources)
+                .DistinctBy(x => x.Name)
+        )
             context.RegisterPostInitializationOutput(x => x.AddSource($"{name}.g.cs", source));
-
-        var attributeSourceNameFieldInfo = _attributeType.GetField("SourceName");
-        var attributeSourceTextFieldInfo = _attributeType.GetField("SourceText");
-        string sourceName = (string)attributeSourceNameFieldInfo.GetValue(null);
-        string sourceText = (string)attributeSourceTextFieldInfo.GetValue(null);
-        context.RegisterPostInitializationOutput(x =>
-            x.AddSource($"{sourceName}.a.g.cs", sourceText)
-        );
 
         var syntaxProvider = context.SyntaxProvider.CreateSyntaxProvider(
             IsSyntaxTarget,

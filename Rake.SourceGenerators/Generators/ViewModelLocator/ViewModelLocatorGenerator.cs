@@ -92,15 +92,22 @@ internal class ViewModelLocatorGenerator
 
         var builder = CodeBuilder.Create(symbol);
 
+        builder.WithAccessModifier(Accessibility.NotApplicable);
+
+        builder.DontSortFieldsByName();
+
         builder.AddNamespaceImport("System");
         builder.AddNamespaceImport("Microsoft.Extensions.DependencyInjection");
 
         builder
             .AddConstructor(Accessibility.Public)
             .AddParameter("IServiceProvider", "serviceProvider")
-            .WithBody(writer => writer.AppendLine("ServiceProvider = serviceProvider;"));
+            .WithBody(writer => writer.AppendLine("_serviceProvider = serviceProvider;"));
 
-        builder.AddProperty("ServiceProvider").SetType<IServiceProvider>().UseGetOnlyAutoProp();
+        builder
+            .AddField("_serviceProvider", Accessibility.Private)
+            .SetType<IServiceProvider>()
+            .WithReadonlyValue();
 
         var propertyNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var vm in discoveredViewModels)
@@ -118,7 +125,7 @@ internal class ViewModelLocatorGenerator
             builder
                 .AddProperty(propertyName)
                 .SetType(fullTypeName)
-                .WithGetterExpression($"ServiceProvider.GetRequiredService<{fullTypeName}>()");
+                .WithGetterExpression($"_serviceProvider.GetRequiredService<{fullTypeName}>()");
         }
 
         return (builder.Build(), null);
@@ -135,9 +142,7 @@ internal class ViewModelLocatorGenerator
     )
     {
         if (namespaceSymbol is null)
-        {
             return;
-        }
 
         foreach (var type in namespaceSymbol.GetTypeMembers())
         {

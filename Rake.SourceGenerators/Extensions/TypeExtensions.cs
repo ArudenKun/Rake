@@ -2,32 +2,43 @@
 
 internal static class TypeExtensions
 {
-    public static bool IsOrInherits(this ITypeSymbol type, ITypeSymbol baseType)
+    /// <summary>
+    /// Gets the value of a public static field from the target Type cast to <typeparamref name="T"/>.
+    /// </summary>
+    public static T? GetStaticFieldValue<T>(this Type type, string fieldName)
     {
-        for (var current = type; current != null; current = current.BaseType)
+        var fieldInfo = type.GetField(
+            fieldName,
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+        );
+
+        if (fieldInfo is null)
         {
-            if (SymbolEqualityComparer.Default.Equals(current, baseType))
-                return true;
+            throw new InvalidOperationException(
+                $"Field '{fieldName}' not found on type '{type.FullName}'."
+            );
         }
 
-        return false;
+        return (T?)fieldInfo.GetValue(null);
     }
 
-    public static bool IsOrInherits(this ITypeSymbol type, string baseType)
+    /// <summary>
+    /// Tries to get the value of a public static field from the target Type.
+    /// </summary>
+    public static bool TryGetStaticFieldValue<T>(this Type type, string fieldName, out T? value)
     {
-        for (var current = type; current != null; current = current.BaseType)
+        var fieldInfo = type.GetField(
+            fieldName,
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+        );
+
+        if (fieldInfo is not null)
         {
-            if (current.Name == baseType)
-                return true;
+            value = (T?)fieldInfo.GetValue(null);
+            return true;
         }
 
+        value = default;
         return false;
     }
-
-    public static bool IsEnum(this ITypeSymbol type) => type.TypeKind is TypeKind.Enum;
-
-    public static bool IsClass(this ITypeSymbol type) => type.TypeKind is TypeKind.Class;
-
-    public static bool IsNullable(this ITypeSymbol type) =>
-        type.OriginalDefinition.SpecialType is SpecialType.System_Nullable_T;
 }
